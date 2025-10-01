@@ -4,7 +4,7 @@
 // @termsOfService  http://swagger.io/terms/
 
 // @contact.name   Lev U.
-// @contact.url    //
+// @contact.url    https://github.com/LevYur/project.git
 // @contact.email  lev.uy@mail.ru
 
 // @license.name  Apache 2.0
