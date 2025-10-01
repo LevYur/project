@@ -1,0 +1,44 @@
+# Git
+.git
+.gitignore
+.github/
+.gitlab/
+
+# Logs & temp files
+**/logs/
+**/*.log
+**/*.tmp
+**/*.swp
+**/*.DS_Store
+
+# Build artifacts
+**/bin/
+**.test
+**/test/
+**/tests/
+**.exe
+**.out
+coverage.out
+*.coverprofile
+
+# IDE
+.vscode/
+.idea/
+**/.vscode/
+**/.idea/
+
+# Dependencies
+**/vendor/
+**/node_modules/
+
+# Configs
+**/.env
+**/.env.*
+**/config/local.yaml
+**/config/.env
+**/.env.example
+**/config.example.yaml
+
+# Linter configs (optional)
+.golangci.yml
+.golangci-lint*

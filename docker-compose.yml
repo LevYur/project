@@ -1,0 +1,17 @@
+services:
+
+  gateway-service:
+    build: ./gateway
+    container_name: gateway-service
+    restart: unless-stopped
+    ports:
+      - "7970:7970"
+    env_file:
+      - ./gateway/config/.env
+    #depends_on:
+      #- auth-service
+      #- products-service
+      #- users-service
+      #- basket-service
+      #- orders-service
+      #- nots-service

@@ -1,0 +1,38 @@
+# Logs & temp files
+**/logs/
+**/*.log
+**/*.tmp
+**/*.swp
+**/*.DS_Store
+
+# Build artifacts
+**/bin/
+*.test
+**.exe
+**.out
+coverage.out
+*.coverprofile
+
+# IDE
+.vscode/
+.idea/
+**/.vscode/
+**/.idea/
+
+# Dependencies
+**/vendor/
+**/node_modules/
+
+# Configs
+**/.env
+**/.env.*
+**/config/local.yaml
+**/config/.env
+
+# Ignore database files
+**/data/
+**/storage/
+**/db/
+
+# Ignore temporary files
+**/temp/
