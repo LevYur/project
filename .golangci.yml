@@ -1,25 +1,23 @@
 run:
   timeout: 5m
-  skip-dirs:
-    - vendor
-    - docs
-    - bin
 
 linters:
   enable:
     - govet
     - errcheck
     - staticcheck
-    - unused  # добавил твой предыдущий unused
+    - unused
 
 linters-settings:
-  errcheck:
-    # exclude-tests больше не поддерживается
-    # чтобы игнорировать тесты, используем exclude с регуляркой
-    exclude: ".*_test\\.go"
+  errcheck: {}
 
 issues:
   exclude-rules:
-    - path: "_test.go"
+    # исключаем ошибки errcheck в тестах
+    - path: _test\.go
       linters:
         - errcheck
+    # исключаем папки vendor, docs, bin
+    - path: vendor
+    - path: docs
+    - path: bin
