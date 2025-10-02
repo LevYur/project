@@ -17,7 +17,22 @@ issues:
     - path: _test\.go
       linters:
         - errcheck
-    # исключаем папки vendor, docs, bin
+    # исключаем vendor, docs, bin для всех линтеров
     - path: vendor
+      linters:
+        - govet
+        - errcheck
+        - staticcheck
+        - unused
     - path: docs
+      linters:
+        - govet
+        - errcheck
+        - staticcheck
+        - unused
     - path: bin
+      linters:
+        - govet
+        - errcheck
+        - staticcheck
+        - unused
