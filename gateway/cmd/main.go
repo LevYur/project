@@ -31,7 +31,9 @@ func main() {
 	cfg := config.MustLoad()
 
 	log := logger.InitLogger(cfg.Env)
-	defer log.Sync() // сбрасывает буфер логов при завершении программы
+	defer func() {
+		_ = log.Sync() // сбрасывает буфер логов при завершении программы
+	}()
 
 	if cfg.Env == constants.EnvProd {
 		gin.SetMode(gin.ReleaseMode)

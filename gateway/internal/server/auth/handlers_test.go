@@ -14,15 +14,15 @@ import (
 	"time"
 )
 
-type testCase struct {
-	name                 string
-	requestBody          []byte
-	nextServiceReqURL    string
-	nextServiceReqMethod string
-	expectedStatus       int
-	expectedBody         []byte
-	expectedCT           string
-}
+//type testCase struct {
+//	name                 string
+//	requestBody          []byte
+//	nextServiceReqURL    string
+//	nextServiceReqMethod string
+//	expectedStatus       int
+//	expectedBody         []byte
+//	expectedCT           string
+//}
 
 func TestLoginHandler_Positive(t *testing.T) {
 
