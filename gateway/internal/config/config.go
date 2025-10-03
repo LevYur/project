@@ -24,7 +24,7 @@ type HTTPServer struct {
 
 type Auth struct {
 	JWTSecret string        `yaml:"jwt_secret" env:"AUTH_JWT_SECRET"`
-	TokenTTTL time.Duration `yaml:"token_ttl" env:"AUTH_TOKEN_TTL"`
+	TokenTTL time.Duration `yaml:"token_ttl" env:"AUTH_TOKEN_TTL"`
 }
 
 type Services struct {
@@ -40,19 +40,22 @@ func MustLoad() *Config {
 
 	cfg := Config{}
 
-	// settings from local file
-	err := cleanenv.ReadConfig("./config/local.yaml", &cfg)
-	if err != nil {
-		log.Println("local: config file not exists or incorrect")
+	// try to load config from local file
+	err := cleanenv.ReadConfig("./config/.env", &cfg)
+	if err == nil {
+		log.Println("✅ loaded config from local .env")
+		return &cfg
+	} else {
+		log.Println("local config not found, trying environment variables...")
 	}
 
-	// docker environment variables
+	// settings from env variables (from docker)
 	err = cleanenv.ReadEnv(&cfg)
 	if err != nil {
-		log.Println("docker: failed to read environment variables: ", err)
+		log.Fatalf("cannot load config from environment: %v", err)
 	}
 
-	log.Println("✅ config settings are correct")
+	log.Println("✅ config loaded from environment")
 
 	return &cfg
 }

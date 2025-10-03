@@ -71,6 +71,8 @@ func (s *Server) Stop() {
 			zap.String("address", s.httpServer.Addr),
 			zap.String(constants.LogComponentKey, op))
 	}
+
+	s.log.Info("starting server", zap.String("address", s.httpServer.Addr))
 }
 
 func (s *Server) RunWithGracefulShutdown() {
@@ -81,7 +83,6 @@ func (s *Server) RunWithGracefulShutdown() {
 	go s.MustRun()
 
 	<-stop
-	s.log.Info("Shutting down server...")
 
 	s.Stop()
 }
