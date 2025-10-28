@@ -12,11 +12,19 @@ import (
 var visitors = make(map[string]*rate.Limiter)
 var mtx sync.Mutex
 
+func ResetVisitors() {
+	mtx.Lock()
+	defer mtx.Unlock()
+	visitors = make(map[string]*rate.Limiter)
+}
+
 func RateLimiter() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
+		const op = "gateway.middleware.RateLimiter"
+
 		ip := c.ClientIP()
-		limiter := getVisitor(ip)
+		limiter := GetVisitor(ip)
 
 		if !limiter.Allow() {
 
@@ -25,6 +33,7 @@ func RateLimiter() gin.HandlerFunc {
 				log := logAny.(*zap.Logger)
 
 				log.Warn("Rate limit exceeded",
+					zap.String(constants.LogComponentKey, op),
 					zap.String(constants.LogIPKey, ip),
 					zap.String(constants.LogPathKey, c.FullPath()),
 					zap.String(constants.LogMethodKey, c.Request.Method))
@@ -38,7 +47,7 @@ func RateLimiter() gin.HandlerFunc {
 	}
 }
 
-func getVisitor(ip string) *rate.Limiter {
+func GetVisitor(ip string) *rate.Limiter {
 
 	mtx.Lock()
 	defer mtx.Unlock()

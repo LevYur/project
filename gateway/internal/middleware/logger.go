@@ -13,9 +13,12 @@ func Logger(log *zap.Logger) gin.HandlerFunc {
 
 		start := time.Now()
 
-		reqID, _ := c.Get(constants.RequestIDKey)
-		if reqID != nil {
-			log = log.With(zap.String(constants.LogRequestIDKey, reqID.(string)))
+		reqID, ok := c.Get(constants.RequestIDKey)
+
+		// instance of logger for every request
+		if ok {
+			everyRequestLogger := log.With(zap.String(constants.LogRequestIDKey, reqID.(string)))
+			c.Set(constants.LoggerKey, everyRequestLogger)
 		}
 
 		c.Next()

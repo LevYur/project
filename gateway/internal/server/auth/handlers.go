@@ -2,12 +2,16 @@ package auth
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"errors"
 	"gateway/internal/config"
+	"gateway/internal/metrics"
 	"gateway/pkg/constants"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"net/http"
+	"strings"
 )
 
 type Handler struct {
@@ -41,17 +45,9 @@ func RegisterRoutes(cfg *config.Config, rg *gin.RouterGroup, log *zap.Logger) {
 	rg.POST("/register", handler.Register)
 }
 
-//func (h *Handler) Login(c *gin.Context) {
-//	// пока заглушка, без похода в другой сервис
-//	c.JSON(http.StatusOK, gin.H{
-//		"message": "login: все четко!",
-//	})
-//}
-//
-
 // Login godoc
 // @Summary User login
-// Authenticate user and return access & refresh tokens
+// @Description Authenticate user and return access & refresh tokens
 // @Tags auth
 // @Accept json
 // @Produce json
@@ -62,17 +58,12 @@ func RegisterRoutes(cfg *config.Config, rg *gin.RouterGroup, log *zap.Logger) {
 // @Router       /auth/login [post]
 func (h *Handler) Login(c *gin.Context) {
 
-	const op = "internal.server.auth.Login"
+	const op = "gateway.server.auth.Login"
 
 	log := h.log                                 // base logger
 	logAny, exists := c.Get(constants.LoggerKey) // enriched logger if exists
 	if exists && logAny != nil {
 		log = logAny.(*zap.Logger)
-	}
-
-	if c.Request.Method != http.MethodPost {
-		c.JSON(http.StatusMethodNotAllowed, gin.H{"error": "method not allowed"})
-		return
 	}
 
 	var req LoginRequest
@@ -83,6 +74,10 @@ func (h *Handler) Login(c *gin.Context) {
 			zap.Error(err),
 			zap.String(constants.LogComponentKey, op),
 		)
+
+		reason := classifyValidationError(err)
+		metrics.GatewayInvalidLoginRequestTotal.WithLabelValues(reason).Inc() // prometheus
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
 		return
 
@@ -94,21 +89,23 @@ func (h *Handler) Login(c *gin.Context) {
 			zap.Error(err),
 			zap.String(constants.LogComponentKey, op),
 		)
+
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
 	}
 
 	ctx := c.Request.Context()
-	authReq, err := http.NewRequestWithContext(
-		ctx, http.MethodPost, h.nextServiceURL, bytes.NewBuffer(body))
+	url := h.nextServiceURL + "/auth/login"
+	authReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(body))
 
 	if err != nil {
-		log.Error("prepare request error",
+		log.Error("failed to create request",
 			zap.Error(err),
 			zap.String(constants.LogComponentKey, op),
 			zap.String(constants.LogMethodKey, http.MethodPost),
 			zap.String(constants.LogURLServiceKey, h.nextServiceURL),
 		)
+
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
 	}
@@ -116,16 +113,34 @@ func (h *Handler) Login(c *gin.Context) {
 
 	resp, err := h.client.Do(authReq) // client with business-logic context
 	if err != nil {
+
+		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+
+			log.Error("timeout",
+				zap.Error(err),
+				zap.String(constants.LogComponentKey, op),
+				zap.Any("timeout", h.client.Timeout),
+			)
+
+			c.JSON(http.StatusGatewayTimeout, gin.H{"error": "timeout"})
+			return
+		}
+
 		log.Error("send request error",
 			zap.Error(err),
 			zap.String(constants.LogComponentKey, op),
 		)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		c.JSON(http.StatusBadGateway, gin.H{"error": "auth service unavailable"})
 		return
 	}
-	defer func() {
-		_ = resp.Body.Close()
-	}()
+	defer func() { _ = resp.Body.Close() }()
+
+	log.Info("request to auth-service was sent",
+		zap.String(constants.LogComponentKey, op),
+		zap.String(constants.LogURLServiceKey, h.nextServiceURL),
+	)
+
+	// RESPONSE ======================================================
 
 	log.Info("auth service response",
 		zap.String(constants.LogComponentKey, op),
@@ -134,21 +149,13 @@ func (h *Handler) Login(c *gin.Context) {
 		zap.String(constants.LogURLServiceKey, h.nextServiceURL),
 	)
 
-	switch {
-	case resp.StatusCode >= 400 && resp.StatusCode < 500:
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
-
-	case resp.StatusCode >= 500:
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
-	default:
-		c.DataFromReader(resp.StatusCode, resp.ContentLength,
-			resp.Header.Get("Content-Type"), resp.Body, nil)
-	}
+	c.DataFromReader(resp.StatusCode, resp.ContentLength,
+		resp.Header.Get("Content-Type"), resp.Body, nil)
 }
 
 // Register godoc
 // @Summary User register
-// Authenticate user and return access & refresh tokens
+// @Description Authenticate user and return access & refresh tokens
 // @Tags auth
 // @Accept json
 // @Produce json
@@ -159,7 +166,7 @@ func (h *Handler) Login(c *gin.Context) {
 // @Router       /auth/register [post]
 func (h *Handler) Register(c *gin.Context) {
 
-	const op = "internal.server.auth.Register"
+	const op = "gateway.server.auth.Register"
 
 	log := h.log
 	logAny, exist := c.Get(constants.LoggerKey)
@@ -167,13 +174,23 @@ func (h *Handler) Register(c *gin.Context) {
 		log = logAny.(*zap.Logger)
 	}
 
+	//if c.Request.Method != http.MethodPost {
+	//	c.JSON(http.StatusMethodNotAllowed, gin.H{"error": "method not allowed"})
+	//	return
+	//}
+
 	var req RegisterRequest
+
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
 		log.Error("unmarshall error",
 			zap.Error(err),
 			zap.String(constants.LogComponentKey, op),
 		)
+
+		reason := classifyValidationError(err)
+		metrics.GatewayInvalidRegisterRequestTotal.WithLabelValues(reason).Inc() // prometheus
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
 		return
 	}
@@ -189,8 +206,8 @@ func (h *Handler) Register(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	authReq, err := http.NewRequestWithContext(
-		ctx, http.MethodPost, h.nextServiceURL, bytes.NewBuffer(body))
+	url := h.nextServiceURL + "/auth/register"
+	authReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(body))
 
 	if err != nil {
 		log.Error("prepare request error",
@@ -206,11 +223,24 @@ func (h *Handler) Register(c *gin.Context) {
 
 	resp, err := h.client.Do(authReq)
 	if err != nil {
+
+		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+
+			log.Error("timeout",
+				zap.Error(err),
+				zap.String(constants.LogComponentKey, op),
+				zap.Any("timeout", h.client.Timeout),
+			)
+
+			c.JSON(http.StatusGatewayTimeout, gin.H{"error": "timeout"})
+			return
+		}
+
 		log.Error("send request error",
 			zap.Error(err),
 			zap.String(constants.LogComponentKey, op),
 		)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		c.JSON(http.StatusBadGateway, gin.H{"error": "auth service unavailable"})
 		return
 	}
 	defer func() {
@@ -224,18 +254,45 @@ func (h *Handler) Register(c *gin.Context) {
 		zap.String(constants.LogURLServiceKey, h.nextServiceURL),
 	)
 
-	switch {
-	case resp.StatusCode >= 400 && resp.StatusCode < 500:
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+	// RETURN RESPONSE ==========================================
 
-	case resp.StatusCode >= 500:
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
-	default:
-		c.DataFromReader(200, -1, resp.Header.Get("Content-Type"),
-			bytes.NewBuffer([]byte("register: все четко!")), nil)
+	c.DataFromReader(resp.StatusCode, resp.ContentLength,
+		resp.Header.Get("Content-Type"), resp.Body, nil)
+}
 
-		//c.DataFromReader(resp.StatusCode, resp.ContentLength,
-		//	resp.Header.Get("Content-Type"), resp.Body, nil)
+func classifyValidationError(err error) string {
+
+	if strings.Contains(strings.ToLower(err.Error()), "email") {
+		return "invalid email"
 	}
 
+	if strings.Contains(strings.ToLower(err.Error()), "password") {
+		return "invalid password"
+	}
+
+	if strings.Contains(strings.ToLower(err.Error()), "password") {
+		return "invalid password"
+	}
+
+	if strings.Contains(strings.ToLower(err.Error()), "phone") {
+		return "invalid phone"
+	}
+
+	if strings.Contains(strings.ToLower(err.Error()), "name") {
+		return "invalid name"
+	}
+
+	if strings.Contains(strings.ToLower(err.Error()), "surname") {
+		return "invalid surname"
+	}
+
+	if strings.Contains(strings.ToLower(err.Error()), "fathersname") {
+		return "invalid fathers name"
+	}
+
+	if strings.Contains(strings.ToLower(err.Error()), "birthdate") {
+		return "invalid birth date"
+	}
+
+	return "internal"
 }

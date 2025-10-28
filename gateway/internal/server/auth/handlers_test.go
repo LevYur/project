@@ -4,25 +4,45 @@ import (
 	"bytes"
 	"encoding/json"
 	"gateway/internal/config"
+	"gateway/internal/validation"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 	"time"
 )
 
-//type testCase struct {
-//	name                 string
-//	requestBody          []byte
-//	nextServiceReqURL    string
-//	nextServiceReqMethod string
-//	expectedStatus       int
-//	expectedBody         []byte
-//	expectedCT           string
-//}
+type reqTestCase struct {
+	name           string
+	requestBody    []byte
+	authURL        string
+	endpoint       string
+	authMethod     string
+	expectedStatus int
+	expectedBody   string
+}
+
+type proxyTestCase struct {
+	name           string
+	authStatusCode int
+	authBody       string
+	authCT         string
+	expectedStatus int
+	expectedBody   string
+	expectedCT     string
+}
+
+func TestMain(m *testing.M) {
+
+	gin.SetMode(gin.ReleaseMode)
+	os.Exit(m.Run())
+}
+
+// LOGIN UNIT-TESTS ===================================
 
 func TestLoginHandler_Positive(t *testing.T) {
 
@@ -32,7 +52,6 @@ func TestLoginHandler_Positive(t *testing.T) {
 
 	c, _ := gin.CreateTestContext(wr)
 
-	// TODO: временный фейковый auth-сервер, удалить после реализации auth-сервиса
 	fakeAuth := httptest.NewServer(
 		http.HandlerFunc(func(wr http.ResponseWriter, req *http.Request) {
 
@@ -43,31 +62,26 @@ func TestLoginHandler_Positive(t *testing.T) {
 				"user_id":1
 			}`))
 		}))
-
-	// TODO: временный фейковый адрес auth-сервера, поменять после реализации auth-сервиса
+	defer fakeAuth.Close()
 
 	req, _ := http.NewRequest(http.MethodPost, fakeAuth.URL, bytes.NewBuffer(reqBody))
 	req.Header.Set("Content-Type", "application/json")
 	c.Request = req
 
 	testCfg := &config.Config{
+		Services: config.Services{
+			AuthServiceAddr: fakeAuth.URL,
+		},
 		HTTPServer: config.HTTPServer{
 			Timeout:     3 * time.Second,
 			IdleTimeout: 60 * time.Second,
-		},
-
-		// TODO: временный фейковый auth-сервер, удалить после реализации auth-сервиса
-		Services: config.Services{
-			AuthServiceAddr: fakeAuth.URL,
 		},
 	}
 
 	handler := NewHandler(testCfg, zap.NewNop())
 	handler.Login(c)
 
-	if wr.Code != http.StatusOK {
-		require.Equal(t, http.StatusOK, wr.Code)
-	}
+	require.Equal(t, http.StatusOK, wr.Code)
 
 	bodyBytes, err := io.ReadAll(wr.Body)
 	require.NoError(t, err)
@@ -79,18 +93,226 @@ func TestLoginHandler_Positive(t *testing.T) {
 	require.NotEmpty(t, resp.AccessToken)
 	require.NotEmpty(t, resp.RefreshToken)
 	require.NotZero(t, resp.UserID)
-
 }
+
+func TestLoginHandler_Negative(t *testing.T) {
+
+	cases := []reqTestCase{
+		{
+			name:           "invalid JSON empty body",
+			requestBody:    nil, // error []byte(`{""}`),
+			endpoint:       "/api/auth/login",
+			authMethod:     http.MethodPost,
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name:           "invalid JSON: bad email",
+			requestBody:    []byte(`{"email":"test1example.com", "password":"password1"}`), // error
+			endpoint:       "/api/auth/login",
+			authMethod:     http.MethodPost,
+			expectedStatus: http.StatusBadRequest,
+		},
+	}
+
+	for _, tc := range cases {
+
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+
+			// t.Parallel()
+
+			wr := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(wr)
+
+			req := httptest.NewRequest(
+				tc.authMethod, tc.endpoint, bytes.NewBuffer(tc.requestBody))
+
+			req.Header.Set("Content-Type", "application/json")
+			c.Request = req
+
+			testCfg := &config.Config{
+				Services: config.Services{
+					AuthServiceAddr: "http://auth-service:7971",
+				},
+			}
+
+			handler := NewHandler(testCfg, zap.NewNop())
+			handler.Login(c)
+
+			require.Equal(t, tc.expectedStatus, wr.Code)
+		})
+	}
+}
+
+func TestLoginHandler_Proxy_Negative(t *testing.T) {
+
+	cases := []proxyTestCase{
+		{
+			name:           "auth service returns 401",
+			authCT:         "application/json; charset=utf-8",
+			authStatusCode: http.StatusUnauthorized,
+			authBody:       `{"error":"invalid credentials"}`,
+			expectedStatus: http.StatusUnauthorized,
+			expectedBody:   `{"error":"invalid credentials"}`,
+			expectedCT:     "application/json; charset=utf-8",
+		},
+		{
+			name:           "auth service returns 400",
+			authCT:         "application/json; charset=utf-8",
+			authStatusCode: http.StatusBadRequest,
+			authBody:       `{"error":"invalid request"}`,
+			expectedStatus: http.StatusBadRequest,
+			expectedBody:   `{"error":"invalid request"}`,
+			expectedCT:     "application/json; charset=utf-8",
+		},
+		{
+			name:           "auth service returns 500",
+			authCT:         "application/json; charset=utf-8",
+			authStatusCode: http.StatusInternalServerError,
+			authBody:       `{"error":"internal server error"}`,
+			expectedStatus: http.StatusInternalServerError,
+			expectedBody:   `{"error":"internal server error"}`,
+			expectedCT:     "application/json; charset=utf-8",
+		},
+		{
+			name:           "auth service returns 404",
+			authCT:         "application/json; charset=utf-8",
+			authStatusCode: http.StatusNotFound,
+			authBody:       `{"error":"user not found"}`,
+			expectedStatus: http.StatusNotFound,
+			expectedBody:   `{"error":"user not found"}`,
+			expectedCT:     "application/json; charset=utf-8",
+		},
+		{
+			name:           "auth service returns 400 with text/plain",
+			authCT:         "text/plain",
+			authStatusCode: http.StatusBadRequest,
+			authBody:       "bad request plain text",
+			expectedStatus: http.StatusBadRequest,
+			expectedBody:   "bad request plain text",
+			expectedCT:     "text/plain",
+		},
+	}
+
+	for _, tc := range cases {
+
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+
+			t.Parallel()
+
+			fakeAuth := httptest.NewServer(
+				http.HandlerFunc(func(wr http.ResponseWriter, req *http.Request) {
+
+					wr.Header().Set("Content-Type", tc.authCT)
+					wr.WriteHeader(tc.authStatusCode)
+					_, _ = wr.Write([]byte(tc.authBody))
+				}))
+			defer fakeAuth.Close()
+
+			reqBody := []byte(`{"email":"test2@example.com","password":"password2"}`)
+			req := httptest.NewRequest(http.MethodPost, "/api/auth/login", bytes.NewBuffer(reqBody))
+			req.Header.Set("Content-Type", "application/json")
+
+			wr := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(wr)
+			c.Request = req
+
+			testCfg := &config.Config{
+				Services: config.Services{
+					AuthServiceAddr: fakeAuth.URL,
+				},
+				HTTPServer: config.HTTPServer{
+					Timeout:     3 * time.Second,
+					IdleTimeout: 60 * time.Second,
+				},
+			}
+
+			handler := NewHandler(testCfg, zap.NewNop())
+
+			handler.Login(c)
+
+			require.Equal(t, tc.expectedStatus, wr.Code)
+			require.Equal(t, tc.expectedCT, wr.Header().Get("Content-Type"))
+
+			if tc.expectedCT == "application/json; charset=utf-8" {
+				require.JSONEq(t, tc.expectedBody, wr.Body.String())
+			} else {
+				require.Equal(t, tc.expectedBody, wr.Body.String())
+			}
+		})
+	}
+}
+
+func TestLoginHandler_URL_Negative(t *testing.T) {
+
+	cases := []reqTestCase{
+		{
+			name:           "invalid syntax of URL (500)",
+			authURL:        "://invalid-url", // error
+			expectedStatus: http.StatusInternalServerError,
+			expectedBody:   `{"error":"internal server error"}`,
+		},
+		{
+			name:           "unavailable service (502)",
+			authURL:        "http://127.0.0.1:9999", // error
+			expectedStatus: http.StatusBadGateway,
+			expectedBody:   `{"error":"auth service unavailable"}`,
+		},
+	}
+
+	for _, tc := range cases {
+
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+
+			reqBody := []byte(`{"email":"test4@example.com","password":"password4"}`)
+			wr := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(wr)
+
+			req, _ := http.NewRequest(
+				http.MethodPost, "/api/auth/login", bytes.NewBuffer(reqBody))
+			req.Header.Set("Content-Type", "application/json")
+			c.Request = req
+
+			testCfg := &config.Config{
+				Services: config.Services{
+					AuthServiceAddr: tc.authURL,
+				},
+				HTTPServer: config.HTTPServer{
+					Timeout:     3 * time.Second,
+					IdleTimeout: 60 * time.Second,
+				},
+			}
+
+			handler := NewHandler(testCfg, zap.NewNop())
+			handler.Login(c)
+
+			require.Equal(t, tc.expectedStatus, wr.Code)
+			require.Equal(t, "application/json; charset=utf-8", wr.Header().Get("Content-Type"))
+			require.JSONEq(t, tc.expectedBody, wr.Body.String())
+		})
+	}
+}
+
+// REGISTER UNIT-TESTS ===================================
 
 func TestRegisterHandler_Positive(t *testing.T) {
 
-	reqBody := []byte(`{"email":"test1@example.com","password":"password1"}`)
+	reqBody := []byte(`{
+    "email": "leo.urin@example.com",
+    "password": "superpassword",
+    "phone": "+79999999999",
+    "name": "Leo",
+    "surname": "Urin",
+    "fathers_name": "Olegivich",
+    "birth_date": "1993-03-03"
+}`)
 
 	wr := httptest.NewRecorder()
 
 	c, _ := gin.CreateTestContext(wr)
 
-	// TODO: временный фейковый auth-сервер, удалить после реализации auth-сервиса
 	fakeAuth := httptest.NewServer(
 		http.HandlerFunc(func(wr http.ResponseWriter, req *http.Request) {
 
@@ -101,31 +323,27 @@ func TestRegisterHandler_Positive(t *testing.T) {
 				"user_id":1
 			}`))
 		}))
+	defer fakeAuth.Close()
 
-	// TODO: временный фейковый адрес auth-сервера, поменять после реализации auth-сервиса
-
-	req, _ := http.NewRequest(http.MethodPost, fakeAuth.URL, bytes.NewBuffer(reqBody))
+	req, _ := http.NewRequest(http.MethodPost, "/api/auth/register", bytes.NewBuffer(reqBody))
 	req.Header.Set("Content-Type", "application/json")
 	c.Request = req
 
 	testCfg := &config.Config{
+		Services: config.Services{
+			AuthServiceAddr: fakeAuth.URL,
+		},
 		HTTPServer: config.HTTPServer{
 			Timeout:     3 * time.Second,
 			IdleTimeout: 60 * time.Second,
 		},
-
-		// TODO: временный фейковый auth-сервер, удалить после реализации auth-сервиса
-		Services: config.Services{
-			AuthServiceAddr: fakeAuth.URL,
-		},
 	}
 
 	handler := NewHandler(testCfg, zap.NewNop())
-	handler.Login(c)
+	validation.RegisterCustomValidators()
+	handler.Register(c)
 
-	if wr.Code != http.StatusOK {
-		require.Equal(t, http.StatusOK, wr.Code)
-	}
+	require.Equal(t, http.StatusOK, wr.Code)
 
 	bodyBytes, err := io.ReadAll(wr.Body)
 	require.NoError(t, err)
@@ -139,266 +357,227 @@ func TestRegisterHandler_Positive(t *testing.T) {
 	require.NotZero(t, resp.UserID)
 }
 
-// TODO: func TestLoginHandler_Negative(t *testing.T) после auth
+func TestRegisterHandler_Negative(t *testing.T) {
 
-//func TestLoginHandler_Negative(t *testing.T) {
-//
-//	cases := []testCase{
-//		{
-//			name:                 "invalid JSON empty body",
-//			requestBody:          []byte(`{"1"}`), // error
-//			nextServiceReqURL:    "api/auth/login",
-//			nextServiceReqMethod: http.MethodPost,
-//			expectedStatus:       http.StatusBadRequest,
-//			expectedBody:         []byte(`{"error": "invalid request"}`),
-//			expectedCT:           "application/json; charset=utf-8",
-//		},
-//		{
-//			name:                 "invalid JSON: bad email",
-//			requestBody:          []byte(`{"email":"test1example.com", "password":"pass1"}`), // error
-//			nextServiceReqURL:    "api/auth/login",
-//			nextServiceReqMethod: http.MethodPost,
-//			expectedStatus:       http.StatusBadRequest,
-//			expectedBody:         []byte(`{"error":"invalid request"}`),
-//			expectedCT:           "application/json; charset=utf-8",
-//		},
-//		{
-//			name:                 "create request error: service addr empty",
-//			requestBody:          nil,
-//			nextServiceReqURL:    "", // error
-//			nextServiceReqMethod: http.MethodPost,
-//			expectedStatus:       http.StatusInternalServerError,
-//			expectedBody:         []byte(`{"error":"internal server error"}`),
-//			expectedCT:           "application/json; charset=utf-8",
-//		},
-//		{
-//			name:                 "create request error: bad method",
-//			requestBody:          nil,
-//			nextServiceReqURL:    "api/auth/login",
-//			nextServiceReqMethod: http.MethodGet, // error
-//			expectedStatus:       http.StatusMethodNotAllowed,
-//			expectedBody:         []byte(`{"error":"method not allowed"}`),
-//			expectedCT:           "application/json; charset=utf-8",
-//		},
-//
-//		// TODO: активировать тесты после написания auth-сервиса
-//
-//		//{
-//		//	name:                 "send response error: auth returns 200",
-//		//	requestBody:          nil,
-//		//	nextServiceReqURL:    "api/auth/login",
-//		//	nextServiceReqMethod: http.MethodPost,
-//		//	expectedStatus:       http.StatusOK,
-//		//	expectedBody:         []byte("{}"),
-//		//	expectedCT:           "application/json",
-//		//},
-//		//{
-//		//	name:                 "send response error: auth returns 400",
-//		//	requestBody:          nil,
-//		//	nextServiceReqURL:    "api/auth/login",
-//		//	nextServiceReqMethod: http.MethodPost,
-//		//	expectedStatus:       http.StatusBadRequest,
-//		//	expectedBody:         []byte("{}"),
-//		//	expectedCT:           "application/json",
-//		//},
-//		//{
-//		//	name:                 "send response error: auth returns 500",
-//		//	requestBody:          nil,
-//		//	nextServiceReqURL:    "api/auth/login",
-//		//	nextServiceReqMethod: http.MethodPost,
-//		//	expectedStatus:       http.StatusInternalServerError,
-//		//	expectedBody:         []byte("{}"),
-//		//	expectedCT:           "application/json",
-//		//},
-//		//{
-//		//	name:                 "send response error: auth returns body",
-//		//	requestBody:          []byte(`{"msg":"body from auth"}`),
-//		//	nextServiceReqURL:    "api/auth/login",
-//		//	nextServiceReqMethod: http.MethodPost,
-//		//	expectedBody:         []byte(`{"msg":"body from auth"}`),
-//		//	expectedCT:           "application/json",
-//		//},
-//		//{
-//		//	name:                 "send response error: auth returns header",
-//		//	requestBody:          nil,
-//		//	nextServiceReqURL:    "api/auth/login",
-//		//	nextServiceReqMethod: http.MethodPost,
-//		//	expectedStatus:       http.StatusOK,
-//		//	expectedBody:         []byte("{}"),
-//		//	expectedCT:           "application/json",
-//		//},
-//	}
-//
-//	for _, tt := range cases {
-//
-//		tt := tt
-//		t.Run(tt.name, func(t *testing.T) {
-//
-//			// t.Parallel()
-//
-//			wr := httptest.NewRecorder()
-//			c, _ := gin.CreateTestContext(wr)
-//
-//			// TODO: проблема - всегда возвращает 500,
-//			// TODO: пока auth-сервис недоступен по адресу "api/auth/login"
-//
-//			req, _ := http.NewRequest(
-//				tt.nextServiceReqMethod, tt.nextServiceReqURL, bytes.NewBuffer(tt.requestBody))
-//			req.Header.Set("Content-Type", "application/json")
-//
-//			c.Request = req
-//
-//			testCfg := &config.Config{
-//				HTTPServer: config.HTTPServer{
-//					Timeout:     3 * time.Second,
-//					IdleTimeout: 60 * time.Second,
-//				},
-//			}
-//
-//			handler := NewHandler(testCfg, zap.NewNop())
-//			handler.Login(c)
-//
-//			assert.Equal(t, tt.expectedStatus, wr.Code)
-//
-//			wrBody, _ := io.ReadAll(wr.Body)
-//			if tt.expectedCT == "application/json" && tt.expectedBody != nil {
-//				require.JSONEq(t, string(tt.expectedBody), string(wrBody))
-//			} else {
-//				require.Empty(t, wrBody)
-//			}
-//
-//			assert.Equal(t, tt.expectedCT, wr.Header().Get("Content-Type"))
-//		})
-//	}
-//}
+	badReqBody := []byte(`{
+    "email": "leo.urin.example.com",
+    "password": "",
+    "phone": "+7-999-999-99-99",
+    "name": "Leo",
+    "surname": "Urin",
+    "fathers_name": "Olegivich",
+    "birth_date": "1993-03-03"
+}`)
 
-// TODO: func TestRegisterHandler_Negative(t *testing.T) после auth
+	cases := []reqTestCase{
+		{
+			name:           "invalid JSON empty body",
+			requestBody:    nil, // error []byte(`{}`),
+			endpoint:       "/api/auth/register",
+			authMethod:     http.MethodPost,
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name:           "invalid JSON: bad email",
+			requestBody:    badReqBody, // error
+			endpoint:       "/api/auth/register",
+			authMethod:     http.MethodPost,
+			expectedStatus: http.StatusBadRequest,
+		},
+	}
 
-//func TestRegisterHandler_Negative(t *testing.T) {
-//	cases := []testCase{
-//		{
-//			name:                 "invalid JSON empty body",
-//			requestBody:          []byte(""), // error
-//			nextServiceReqURL:    "api/auth/register",
-//			nextServiceReqMethod: http.MethodPost,
-//			expectedStatus:       http.StatusBadRequest,
-//			expectedBody:         []byte(`{"error": "invalid request"}`),
-//			expectedCT:           "application/json",
-//		},
-//		{
-//			name:                 "invalid JSON: bad email",
-//			requestBody:          []byte(`{"email":"test1example.com", "password":"pass1"}`), // error
-//			nextServiceReqURL:    "api/auth/register",
-//			nextServiceReqMethod: http.MethodPost,
-//			expectedStatus:       http.StatusBadRequest,
-//			expectedBody:         []byte(`{"error":"invalid request"}`),
-//			expectedCT:           "application/json",
-//		},
-//		{
-//			name:                 "create request error: service addr empty",
-//			requestBody:          nil,
-//			nextServiceReqURL:    "", // error
-//			nextServiceReqMethod: http.MethodPost,
-//			expectedStatus:       http.StatusInternalServerError,
-//			expectedBody:         []byte(`{"error":"internal server error"}`),
-//			expectedCT:           "application/json",
-//		},
-//		{
-//			name:                 "create request error: bad method",
-//			requestBody:          nil,
-//			nextServiceReqURL:    "api/auth/register",
-//			nextServiceReqMethod: http.MethodGet, // error
-//			expectedStatus:       http.StatusMethodNotAllowed,
-//			expectedBody:         []byte(`{"error":"method not allowed"}`),
-//			expectedCT:           "application/json",
-//		},
-//
-//		// TODO: активировать тесты после написания auth-сервиса
-//
-//		//{
-//		//	name:                 "send response error: auth returns 200",
-//		//	requestBody:          nil,
-//		//	nextServiceReqURL:    "api/auth/register",
-//		//	nextServiceReqMethod: http.MethodPost,
-//		//	expectedStatus:       http.StatusOK,
-//		//	expectedBody:         []byte("{}"),
-//		//	expectedCT:           "application/json",
-//		//},
-//		//{
-//		//	name:                 "send response error: auth returns 400",
-//		//	requestBody:          nil,
-//		//	nextServiceReqURL:    "api/auth/register",
-//		//	nextServiceReqMethod: http.MethodPost,
-//		//	expectedStatus:       http.StatusBadRequest,
-//		//	expectedBody:         []byte("{}"),
-//		//	expectedCT:           "application/json",
-//		//},
-//		//{
-//		//	name:                 "send response error: auth returns 500",
-//		//	requestBody:          nil,
-//		//	nextServiceReqURL:    "api/auth/register",
-//		//	nextServiceReqMethod: http.MethodPost,
-//		//	expectedStatus:       http.StatusInternalServerError,
-//		//	expectedBody:         []byte("{}"),
-//		//	expectedCT:           "application/json",
-//		//},
-//		//{
-//		//	name:                 "send response error: auth returns body",
-//		//	requestBody:          []byte(`{"msg":"body from auth"}`),
-//		//	nextServiceReqURL:    "api/auth/register",
-//		//	nextServiceReqMethod: http.MethodPost,
-//		//	expectedBody:         []byte(`{"msg":"body from auth"}`),
-//		//	expectedCT:           "application/json",
-//		//},
-//		//{
-//		//	name:                 "send response error: auth returns header",
-//		//	requestBody:          nil,
-//		//	nextServiceReqURL:    "api/auth/register",
-//		//	nextServiceReqMethod: http.MethodPost,
-//		//	expectedStatus:       http.StatusOK,
-//		//	expectedBody:         []byte("{}"),
-//		//	expectedCT:           "application/json",
-//		//},
-//	}
-//
-//	for _, tt := range cases {
-//
-//		tt := tt
-//		t.Run(tt.name, func(t *testing.T) {
-//
-//			// t.Parallel()
-//
-//			wr := httptest.NewRecorder()
-//			c, _ := gin.CreateTestContext(wr)
-//
-//			// TODO: проблема - всегда возвращает 500,
-//			// TODO: пока auth-сервис недоступен по адресу "api/auth/register"
-//			req, _ := http.NewRequest(
-//				tt.nextServiceReqMethod, tt.nextServiceReqURL, bytes.NewBuffer(tt.requestBody))
-//			req.Header.Set("Content-Type", "application/json")
-//
-//			c.Request = req
-//
-//			testCfg := &config.Config{
-//				HTTPServer: config.HTTPServer{
-//					Timeout:     3 * time.Second,
-//					IdleTimeout: 60 * time.Second,
-//				},
-//			}
-//
-//			handler := NewHandler(testCfg, zap.NewNop())
-//			handler.Register(c)
-//
-//			assert.Equal(t, tt.expectedStatus, wr.Code)
-//
-//			wrBody, _ := io.ReadAll(wr.Body)
-//			if tt.expectedCT == "application/json" && tt.expectedBody != nil {
-//				require.JSONEq(t, string(tt.expectedBody), string(wrBody))
-//			} else {
-//				require.Empty(t, wrBody)
-//			}
-//
-//			assert.Equal(t, tt.expectedCT, wr.Header().Get("Content-Type"))
-//		})
-//	}
-//}
+	for _, tc := range cases {
+
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+
+			t.Parallel()
+
+			wr := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(wr)
+
+			req, err := http.NewRequest(
+				tc.authMethod, tc.endpoint, bytes.NewBuffer(tc.requestBody))
+			require.NoError(t, err)
+			req.Header.Set("Content-Type", "application/json")
+			c.Request = req
+
+			testCfg := &config.Config{
+				Services: config.Services{
+					AuthServiceAddr: "http://auth-service:7971",
+				},
+				HTTPServer: config.HTTPServer{
+					Timeout:     3 * time.Second,
+					IdleTimeout: 60 * time.Second,
+				},
+			}
+
+			handler := NewHandler(testCfg, zap.NewNop())
+			validation.RegisterCustomValidators()
+			handler.Register(c)
+
+			require.Equal(t, tc.expectedStatus, wr.Code)
+		})
+	}
+}
+
+func TestRegisterHandler_Proxy_Negative(t *testing.T) {
+
+	cases := []proxyTestCase{
+		{
+			name:           "auth service returns 409",
+			authCT:         "application/json; charset=utf-8",
+			authStatusCode: http.StatusConflict,
+			authBody:       `{"error":"user already registered"}`,
+			expectedStatus: http.StatusConflict,
+			expectedBody:   `{"error":"user already registered"}`,
+			expectedCT:     "application/json; charset=utf-8",
+		},
+		{
+			name:           "auth service returns 500",
+			authCT:         "application/json; charset=utf-8",
+			authStatusCode: http.StatusInternalServerError,
+			authBody:       `{"error":"internal server error"}`,
+			expectedStatus: http.StatusInternalServerError,
+			expectedBody:   `{"error":"internal server error"}`,
+			expectedCT:     "application/json; charset=utf-8",
+		},
+		{
+			name:           "auth service returns 404",
+			authCT:         "application/json; charset=utf-8",
+			authStatusCode: http.StatusNotFound,
+			authBody:       `{"error":"user not found"}`,
+			expectedStatus: http.StatusNotFound,
+			expectedBody:   `{"error":"user not found"}`,
+			expectedCT:     "application/json; charset=utf-8",
+		},
+		{
+			name:           "auth service returns 400 with text/plain",
+			authCT:         "text/plain",
+			authStatusCode: http.StatusBadRequest,
+			authBody:       "bad request plain text",
+			expectedStatus: http.StatusBadRequest,
+			expectedBody:   "bad request plain text",
+			expectedCT:     "text/plain",
+		},
+	}
+
+	for _, tc := range cases {
+
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+
+			t.Parallel()
+
+			fakeAuth := httptest.NewServer(
+				http.HandlerFunc(func(wr http.ResponseWriter, req *http.Request) {
+
+					wr.Header().Set("Content-Type", tc.authCT)
+					wr.WriteHeader(tc.authStatusCode)
+					_, _ = wr.Write([]byte(tc.authBody))
+				}))
+			defer fakeAuth.Close()
+
+			reqBody := []byte(`{
+    "email": "leo.urin@example.com",
+    "password": "superpassword",
+    "phone": "+79999999999",
+    "name": "Leo",
+    "surname": "Urin",
+    "fathers_name": "Olegivich",
+    "birth_date": "1993-03-03"
+}`)
+			req, _ := http.NewRequest(http.MethodPost, "/api/auth/register", bytes.NewBuffer(reqBody))
+			req.Header.Set("Content-Type", "application/json")
+
+			wr := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(wr)
+			c.Request = req
+
+			testCfg := &config.Config{
+				Services: config.Services{
+					AuthServiceAddr: fakeAuth.URL,
+				},
+				HTTPServer: config.HTTPServer{
+					Timeout:     3 * time.Second,
+					IdleTimeout: 60 * time.Second,
+				},
+			}
+
+			handler := NewHandler(testCfg, zap.NewNop())
+			validation.RegisterCustomValidators()
+			handler.Register(c)
+
+			require.Equal(t, tc.expectedStatus, wr.Code)
+			require.Equal(t, tc.expectedCT, wr.Header().Get("Content-Type"))
+
+			if tc.expectedCT == "application/json; charset=utf-8" {
+				require.JSONEq(t, tc.expectedBody, wr.Body.String())
+			} else {
+				require.Equal(t, tc.expectedBody, wr.Body.String())
+			}
+		})
+	}
+}
+
+func TestRegisterHandler_URL_Negative(t *testing.T) {
+
+	cases := []reqTestCase{
+		{
+			name:           "invalid syntax of URL (500)",
+			authURL:        "://invalid-url", // error
+			expectedStatus: http.StatusInternalServerError,
+			expectedBody:   `{"error":"internal server error"}`,
+		},
+		{
+			name:           "unavailable service (502)",
+			authURL:        "http://127.0.0.1:9999", // error
+			expectedStatus: http.StatusBadGateway,
+			expectedBody:   `{"error":"auth service unavailable"}`,
+		},
+	}
+
+	for _, tc := range cases {
+
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+
+			reqBody := []byte(`{
+    "email": "leo.urin@example.com",
+    "password": "superpassword",
+    "phone": "+79999999999",
+    "name": "Leo",
+    "surname": "Urin",
+    "fathers_name": "Olegivich",
+    "birth_date": "1993-03-03"
+}`)
+
+			wr := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(wr)
+
+			req, _ := http.NewRequest(
+				http.MethodPost, "/api/auth/register", bytes.NewBuffer(reqBody))
+			req.Header.Set("Content-Type", "application/json")
+
+			c.Request = req
+
+			testCfg := &config.Config{
+				Services: config.Services{
+					AuthServiceAddr: tc.authURL,
+				},
+				HTTPServer: config.HTTPServer{
+					Timeout:     3 * time.Second,
+					IdleTimeout: 60 * time.Second,
+				},
+			}
+
+			handler := NewHandler(testCfg, zap.NewNop())
+			validation.RegisterCustomValidators()
+			handler.Register(c)
+
+			require.Equal(t, tc.expectedStatus, wr.Code)
+			require.Equal(t, "application/json; charset=utf-8", wr.Header().Get("Content-Type"))
+			require.JSONEq(t, tc.expectedBody, wr.Body.String())
+		})
+	}
+}

@@ -13,12 +13,12 @@ type LoginResponse struct {
 
 type RegisterRequest struct {
 	Email       string `json:"email" binding:"required,email"`
-	Password    string `json:"password" binding:"required"`
-	Phone       string `json:"phone" binding:"required"`
-	Name        string `json:"name" binding:"omitempty"`
-	Surname     string `json:"surname" binding:"omitempty"`
-	FathersName string `json:"fathers_name" binding:"omitempty"`
-	BirthDate   string `json:"birth_date" binding:"omitempty"`
+	Password    string `json:"password" binding:"required,min=8"`
+	Phone       string `json:"phone" binding:"required,phone"`
+	Name        string `json:"name" binding:"required,name,max=50"`
+	Surname     string `json:"surname" binding:"omitempty,name,max=50"`
+	FathersName string `json:"fathers_name" binding:"omitempty,name,max=50"`
+	BirthDate   string `json:"birth_date" binding:"omitempty,birthdate"`
 }
 
 type RegisterResponse struct {

@@ -15,14 +15,18 @@ const (
 
 // keys for zap.Logger
 const (
-	LogRequestIDKey  = "request_id"
-	LogErrorKey      = "error"
-	LogMethodKey     = "method"
-	LogPathKey       = "path"
-	LogStatusKey     = "status"
-	LogDurationKey   = "duration"
-	LogComponentKey  = "component"
-	LogIPKey         = "client_ip"
-	LogEmailKey      = "email"
-	LogURLServiceKey = "url_service"
+	LogRequestIDKey    = "request_id"
+	LogErrorKey        = "error"
+	LogMethodKey       = "method"
+	LogPathKey         = "path"
+	LogURLKey          = "url"
+	LogStatusKey       = "status"
+	LogDurationKey     = "duration"
+	LogComponentKey    = "component"
+	LogIPKey           = "client_ip"
+	LogEmailKey        = "email"
+	LogURLServiceKey   = "url_service"
+	LogUserIDKey       = "user_id"
+	LogResponseBodyKey = "response_body"
+	LogRequestBodyKey  = "request_body"
 )

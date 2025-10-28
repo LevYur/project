@@ -14,9 +14,9 @@ func RequestID() gin.HandlerFunc {
 			reqID = uuid.NewString()
 		}
 
-		c.Set(constants.RequestIDKey, reqID)
+		c.Set(constants.RequestIDKey, reqID) // add into context.Context
 
-		c.Writer.Header().Set("X-Request-ID", reqID)
+		c.Writer.Header().Set("X-Request-ID", reqID) // add into Header
 
 		c.Next()
 	}
