@@ -34,10 +34,12 @@ coverage.out
 # Configs
 **/.env
 **/.env.*
-**/config/local.yaml
-**/config/.env
 **/.env.example
-**/config.example.yaml
+**/config/.env
+**/config/.env.local
+**/config/.env.prod
+**/config/.env.dev
+**/config/.env.example
 
 # Linter configs (optional)
 .golangci.yml

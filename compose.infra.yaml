@@ -1,0 +1,80 @@
+services:
+
+  rabbitmq-service:
+    image: rabbitmq:3.13-management
+    container_name: rabbitmq-service
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - project
+
+
+  prometheus-service:
+    image: prom/prometheus:v2.53.0
+    container_name: prometheus
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - project
+
+
+  promtail:
+    image: grafana/promtail:latest
+    container_name: promtail
+    depends_on:
+      - loki
+    volumes:
+      - ./grafana/promtail/positions:/promtail-data                # вместо promtail_data:/promtail-data
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro   # для чтения логов конт. напрямую
+      - /var/run/docker.sock:/var/run/docker.sock:ro               # для авт. обнаружения контейнеров
+      - ./grafana/promtail/config.yml:/etc/promtail/config.yml:ro  # настройки promtail из файла
+    command:
+      -config.file=/etc/promtail/config.yml
+    networks:
+      - project
+
+
+  loki:
+    image: grafana/loki:2.8.2
+    container_name: loki
+    ports:
+      - "3100:3100"
+    restart: unless-stopped
+    volumes:
+      - loki_data:/loki
+      - ./grafana/loki/config.yml:/etc/loki/config.yml:ro
+    networks:
+      - project
+
+
+  grafana:
+    image: grafana/grafana:10.0.0
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - loki
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=MkRV6gnXk4rcY@k
+      - GF_LOGS_DESTINATION=loki
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - project
+
+
+networks:
+  project:
+    driver: bridge
+
+volumes:
+  prometheus_data:
+  promtail_data:
+  loki_data:
+  grafana_data:

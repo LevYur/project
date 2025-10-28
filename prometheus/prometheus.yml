@@ -1,0 +1,17 @@
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: "gateway"
+    metrics_path: /api/gateway/metrics # указывает путь к /metrics внутри приложения
+    static_configs:
+      - targets: ["gateway-service:7970"]  # порт контейнера gateway
+        labels:
+          service: "gateway"
+
+  - job_name: "auth"
+    metrics_path: /api/auth/metrics # указывает путь к /metrics внутри приложения
+    static_configs:
+      - targets: ["auth-service:7971"]  # порт контейнера auth
+        labels:
+          service: "auth"

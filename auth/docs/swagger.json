@@ -1,0 +1,20 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Auth-service returns the JWT for authorization or after registration",
+        "title": "Auth API",
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "Lev U.",
+            "url": "https://github.com/LevYur/project.git",
+            "email": "lev.uy@mail.ru"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0"
+    },
+    "basePath": "/api/auth/",
+    "paths": {}
+}

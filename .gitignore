@@ -26,8 +26,10 @@ coverage.out
 # Configs
 **/.env
 **/.env.*
-**/config/local.yaml
 **/config/.env
+**/config/.env.local
+**/config/.env.prod
+**/config/.env.dev
 
 # Ignore database files
 **/data/
@@ -36,3 +38,10 @@ coverage.out
 
 # Ignore temporary files
 **/temp/
+
+# Integration tests
+.auth/internal/test/**
+
+# Linter cache
+.golangci-lint.cache
+**/.golangci-lint.cache

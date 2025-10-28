@@ -1,0 +1,74 @@
+services:
+
+  gateway-service:
+    build: ./gateway
+    container_name: gateway-service
+    restart: unless-stopped
+    ports:
+      - "7970:7970"
+    env_file:
+      - ./gateway/config/.env.prod
+    networks:
+      - project
+    #depends_on:
+      #- auth-service
+      #- products-service
+      #- users-service
+      #- basket-service
+      #- orders-service
+      #- nots-service
+
+
+  # ALL auth-service containers ===============================================
+  auth-service:
+    build: ./auth
+    container_name: auth-service
+    restart: unless-stopped
+    ports:
+      - "7971:7971"
+    env_file:
+      - ./auth/config/.env.prod
+    depends_on:
+      - auth-db
+      - auth-migrate
+    networks:
+      - project
+
+  auth-db:
+    image: postgres:16
+    container_name: auth-db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d auth_db -h localhost"]
+      interval: 3s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    restart: always
+    env_file:
+      - ./auth/config/.env.prod
+    ports:
+      - "5432:5432"
+    volumes:
+      - auth-db:/var/lib/postgresql/data
+    networks:
+      - project
+
+  auth-migrate:
+    image: migrate/migrate:v4.16.2
+    env_file:
+      - ./auth/config/.env.prod
+    entrypoint: [ "/bin/sh", "/migrations/run.sh" ]
+    volumes:
+      - ./auth/storage/migrations:/migrations
+    depends_on:
+      auth-db:
+        condition: service_healthy
+    networks:
+      - project
+
+volumes:
+  auth-db:
+    
+networks:
+  project:
+    driver: bridge

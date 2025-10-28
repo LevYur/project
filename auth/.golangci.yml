@@ -1,0 +1,38 @@
+# version: 2 # только для локального запуска
+
+run:
+  timeout: 5m
+
+linters:
+  enable:
+    - govet
+    - errcheck
+    - staticcheck
+    - unused
+
+linters-settings:
+  errcheck: {}
+
+issues:
+  exclude-rules:
+    - path: _test\.go # исключаем ошибки errcheck в тестах
+      linters:
+        - errcheck    # исключаем vendor, docs, bin для всех линтеров
+    - path: vendor
+      linters:
+        - govet
+        - errcheck
+        - staticcheck
+        - unused
+    - path: docs
+      linters:
+        - govet
+        - errcheck
+        - staticcheck
+        - unused
+    - path: bin
+      linters:
+        - govet
+        - errcheck
+        - staticcheck
+        - unused

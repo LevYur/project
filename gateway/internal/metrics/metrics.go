@@ -51,8 +51,8 @@ var (
 )
 
 func init() {
-	prometheus.MustRegister(httpRequestsTotal)
-	prometheus.MustRegister(httpRequestDuration)
+	prometheus.MustRegister(HttpRequestsTotal)
+	prometheus.MustRegister(HttpRequestDuration)
 
 	prometheus.MustRegister(AuthRefreshSuccessTotal)
 	prometheus.MustRegister(AuthRefreshFailedTotal)

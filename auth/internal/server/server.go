@@ -8,9 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
 	"time"
 )
 
@@ -40,19 +37,26 @@ func New(cfg *config.Config, router *gin.Engine, logger *zap.Logger) *Server {
 	return &newServer
 }
 
-func (s *Server) RunWithGracefulShutdown() {
+func (s *Server) RunWithGracefulShutdown(ctx context.Context) {
 
-	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), s.shutdownTimeout)
+	defer cancel()
 
-	go s.MustRun()
+	serverErr := make(chan error, 1)
 
-	<-stop
+	go func() {
+		serverErr <- s.MustRun()
+	}()
 
-	s.Stop()
+	select {
+	case <-ctx.Done(): // завершение по сигналу
+		s.Stop(shutdownCtx)
+	case <-serverErr:
+		s.Stop(shutdownCtx)
+	}
 }
 
-func (s *Server) MustRun() {
+func (s *Server) MustRun() error {
 
 	const op = "auth.server.MustRun"
 
@@ -60,24 +64,26 @@ func (s *Server) MustRun() {
 
 	err := s.httpServer.ListenAndServe()
 	if err != nil && !errors.Is(err, http.ErrServerClosed) {
-		s.log.Fatal("run server error",
+
+		s.log.Error("run server error",
 			zap.Error(err),
 			zap.String(constants.LogAddrKey, s.httpServer.Addr),
 			zap.String(constants.LogComponentKey, op),
 		)
+
+		return err
 	}
 
+	return nil
 }
 
-func (s *Server) Stop() {
+func (s *Server) Stop(ctx context.Context) {
 
 	const op = "auth.server.Stop"
 
-	ctx, cancel := context.WithTimeout(context.Background(), s.shutdownTimeout)
-	defer cancel()
-
 	err := s.httpServer.Shutdown(ctx)
 	if err != nil && !errors.Is(err, http.ErrServerClosed) {
+
 		s.log.Fatal("stop server error",
 			zap.Error(err),
 			zap.String(constants.LogAddrKey, s.httpServer.Addr),

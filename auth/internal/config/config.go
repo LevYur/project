@@ -11,6 +11,7 @@ type Config struct {
 	HTTPServer
 	Auth
 	Services
+	Database
 }
 type HTTPServer struct {
 	Address         string        `env:"HTTP_SERVER_ADDRESS"`
@@ -22,8 +23,9 @@ type HTTPServer struct {
 }
 
 type Auth struct {
-	JWTSecret string        `env:"AUTH_JWT_SECRET"`
-	TokenTTL  time.Duration `env:"AUTH_TOKEN_TTL" env-default:"1h"`
+	JWTSecret       string        `env:"AUTH_JWT_SECRET"`
+	AccessTokenTTL  time.Duration `env:"AUTH_ACCESS_TOKEN_TTL" env-default:"30m"`
+	RefreshTokenTTL time.Duration `env:"AUTH_REFRESH_TOKEN_TTL" env-default:"168h"`
 }
 
 type Services struct {
@@ -35,27 +37,33 @@ type Services struct {
 	NotsServiceAddr     string `env:"SERVICES_NOTS_SERVICE_ADDR"`
 }
 
-func MustLoad() *Config {
+type Database struct {
+	PostgresUser     string `env:"POSTGRES_USER"`
+	PostgresPassword string `env:"POSTGRES_PASSWORD"`
+	PostgresHost     string `env:"POSTGRES_HOST"`
+	PostgresPort     int    `env:"POSTGRES_PORT"`
+	PostgresDB       string `env:"POSTGRES_DB"`
+}
 
-	// settings from local file
+func MustLoad() *Config {
+	
 	var cfg Config
 
+	// settings from env variables (from docker)
+	err := cleanenv.ReadEnv(&cfg)
+	if err == nil {
+		log.Println("✅ loaded config from DOCKER env-variables")
+		return &cfg
+	}
+
 	// try to load config from local file
-	err := cleanenv.ReadConfig("./config/.env.local", &cfg)
+	err = cleanenv.ReadConfig("./config/.env.local", &cfg)
 	if err == nil {
 		log.Println("✅ loaded config from local .env")
 		return &cfg
 	} else {
-		log.Println("local config not found, trying environment variables...")
-	}
-
-	// settings from env variables (from docker)
-	err = cleanenv.ReadEnv(&cfg)
-	if err != nil {
 		log.Fatalf("cannot load config from environment: %v", err)
 	}
-
-	log.Println("✅ config loaded from environment")
 
 	return &cfg
 }

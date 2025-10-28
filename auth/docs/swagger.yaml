@@ -1,0 +1,15 @@
+basePath: /api/auth/
+info:
+  contact:
+    email: lev.uy@mail.ru
+    name: Lev U.
+    url: https://github.com/LevYur/project.git
+  description: Auth-service returns the JWT for authorization or after registration
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Auth API
+  version: "1.0"
+paths: {}
+swagger: "2.0"

@@ -1,0 +1,23 @@
+package users
+
+type RegisterRequest struct {
+	Email       string `json:"email" binding:"required,email"`
+	Password    string `json:"password" binding:"required,min=8"`
+	Phone       string `json:"phone" binding:"required,phone"`
+	Name        string `json:"name" binding:"required,name,max=50"`
+	Surname     string `json:"surname" binding:"omitempty,name,max=50"`
+	FathersName string `json:"fathers_name" binding:"omitempty,name,max=50"`
+	BirthDate   string `json:"birth_date" binding:"omitempty,birthdate"`
+}
+
+type RegisterResponse struct {
+	AccessToken  string `json:"access_token" binding:"required"`
+	RefreshToken string `json:"refresh_token" binding:"required"`
+	UserID       int    `json:"user_id"`
+}
+
+type OutboxEvent struct {
+	ID        int    `db:"id"`
+	EventType string `db:"event_type"`
+	Payload   []byte `db:"payload"`
+}
