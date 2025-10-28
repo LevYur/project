@@ -67,6 +67,9 @@ jobs:
         with:
           version: latest
           working-directory: ./auth
+          args: >
+            --path-prefix=./auth
+            --timeout=5m
 
       - name: Build Docker image
         run: docker build -t auth-service ./auth
