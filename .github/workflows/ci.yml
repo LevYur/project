@@ -70,7 +70,7 @@ jobs:
           args: >
             --path-prefix=./auth
             --timeout=5m
-          continue-on-error: true
+        continue-on-error: true
 
       - name: Build Docker image
         run: docker build -t auth-service ./auth
