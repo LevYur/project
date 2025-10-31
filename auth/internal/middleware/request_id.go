@@ -1,9 +1,9 @@
 package middleware
 
 import (
-	"github.com/LevYur/project/auth/pkg/constants"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"project/auth/pkg/constants"
 )
 
 func RequestID() gin.HandlerFunc {

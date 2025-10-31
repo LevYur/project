@@ -3,13 +3,13 @@ package server
 import (
 	"context"
 	"errors"
-	"github.com/LevYur/project/gateway/internal/config"
-	"github.com/LevYur/project/gateway/pkg/constants"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"net/http"
 	"os"
 	"os/signal"
+	"project/gateway/internal/config"
+	"project/gateway/pkg/constants"
 	"syscall"
 	"time"
 )
@@ -42,7 +42,7 @@ func New(router *gin.Engine, logger *zap.Logger, cfg *config.Config) *Server {
 }
 
 func (s *Server) MustRun() {
-	const op = "github.com/LevYur/project/gateway.server.MustRun"
+	const op = "project/gateway.server.MustRun"
 
 	s.log.Info("Starting server", zap.String("address", s.httpServer.Addr))
 
@@ -58,7 +58,7 @@ func (s *Server) MustRun() {
 
 func (s *Server) Stop() {
 
-	const op = "github.com/LevYur/project/gateway.server.Stop"
+	const op = "project/gateway.server.Stop"
 
 	ctx, cancel := context.WithTimeout(context.Background(), s.shutdownTimeout)
 	defer cancel()

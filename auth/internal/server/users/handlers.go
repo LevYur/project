@@ -3,12 +3,12 @@ package users
 import (
 	"context"
 	"errors"
-	errs "github.com/LevYur/project/auth/internal/errors"
-	"github.com/LevYur/project/auth/internal/metrics"
-	"github.com/LevYur/project/auth/pkg/constants"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"net/http"
+	errs "project/auth/internal/errors"
+	"project/auth/internal/metrics"
+	"project/auth/pkg/constants"
 )
 
 type UsersService interface {

@@ -1,4 +1,4 @@
-module github.com/LevYur/project
+module project
 
 go 1.24.5
 

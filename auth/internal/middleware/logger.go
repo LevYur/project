@@ -2,9 +2,9 @@ package middleware
 
 import (
 	"context"
-	"github.com/LevYur/project/auth/pkg/constants"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
+	"project/auth/pkg/constants"
 	"time"
 )
 

@@ -1,10 +1,10 @@
 package middleware
 
 import (
-	"github.com/LevYur/project/gateway/pkg/constants"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"net/http"
+	"project/gateway/pkg/constants"
 	"runtime/debug"
 )
 

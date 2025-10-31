@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	errs "github.com/LevYur/project/auth/internal/errors"
-	"github.com/LevYur/project/auth/internal/server/auth"
-	"github.com/LevYur/project/auth/internal/service/tokens"
 	"golang.org/x/crypto/bcrypt"
 	"log"
+	errs "project/auth/internal/errors"
+	"project/auth/internal/server/auth"
+	"project/auth/internal/service/tokens"
 )
 
 type AuthRepo interface {

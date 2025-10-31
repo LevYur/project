@@ -6,14 +6,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/LevYur/project/auth/internal/broker/rabbitmq"
-	errs "github.com/LevYur/project/auth/internal/errors"
-	"github.com/LevYur/project/auth/internal/server/users"
-	"github.com/LevYur/project/auth/internal/service/tokens"
-	"github.com/LevYur/project/auth/pkg/constants"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
+	"project/auth/internal/broker/rabbitmq"
+	errs "project/auth/internal/errors"
+	"project/auth/internal/server/users"
+	"project/auth/internal/service/tokens"
+	"project/auth/pkg/constants"
 )
 
 type UsersRepo interface {

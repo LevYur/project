@@ -5,9 +5,9 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	errs "github.com/LevYur/project/auth/internal/errors"
-	"github.com/LevYur/project/auth/internal/server/auth"
 	"github.com/jmoiron/sqlx"
+	errs "project/auth/internal/errors"
+	"project/auth/internal/server/auth"
 )
 
 type Repo struct {

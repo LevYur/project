@@ -2,8 +2,6 @@ package validation
 
 import (
 	"bytes"
-	"github.com/LevYur/project/gateway/internal/config"
-	"github.com/LevYur/project/gateway/internal/server/auth"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -11,6 +9,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"project/gateway/internal/config"
+	"project/gateway/internal/server/auth"
 	"strings"
 	"testing"
 )

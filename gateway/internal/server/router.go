@@ -1,14 +1,14 @@
 package server
 
 import (
-	"github.com/LevYur/project/gateway/internal/config"
-	"github.com/LevYur/project/gateway/internal/middleware"
-	"github.com/LevYur/project/gateway/internal/server/auth"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	httpSwagger "github.com/swaggo/http-swagger"
 	"go.uber.org/zap"
 	"net/http"
+	"project/gateway/internal/config"
+	"project/gateway/internal/middleware"
+	"project/gateway/internal/server/auth"
 )
 
 func SetupRouter(cfg *config.Config, log *zap.Logger) *gin.Engine {

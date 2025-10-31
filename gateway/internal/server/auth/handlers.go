@@ -5,12 +5,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/LevYur/project/gateway/internal/config"
-	"github.com/LevYur/project/gateway/internal/metrics"
-	"github.com/LevYur/project/gateway/pkg/constants"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"net/http"
+	"project/gateway/internal/config"
+	"project/gateway/internal/metrics"
+	"project/gateway/pkg/constants"
 	"strings"
 )
 
@@ -58,7 +58,7 @@ func RegisterRoutes(cfg *config.Config, rg *gin.RouterGroup, log *zap.Logger) {
 // @Router       /auth/login [post]
 func (h *Handler) Login(c *gin.Context) {
 
-	const op = "github.com/LevYur/project/gateway.server.auth.Login"
+	const op = "project/gateway.server.auth.Login"
 
 	log := h.log                                 // base logger
 	logAny, exists := c.Get(constants.LoggerKey) // enriched logger if exists
@@ -166,7 +166,7 @@ func (h *Handler) Login(c *gin.Context) {
 // @Router       /auth/register [post]
 func (h *Handler) Register(c *gin.Context) {
 
-	const op = "github.com/LevYur/project/gateway.server.auth.Register"
+	const op = "project/gateway.server.auth.Register"
 
 	log := h.log
 	logAny, exist := c.Get(constants.LoggerKey)

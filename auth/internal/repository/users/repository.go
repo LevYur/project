@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/LevYur/project/auth/internal/server/users"
 	"github.com/jmoiron/sqlx"
+	"project/auth/internal/server/users"
 )
 
 type Repo struct {

@@ -3,11 +3,11 @@ package server
 import (
 	"context"
 	"errors"
-	"github.com/LevYur/project/auth/internal/config"
-	"github.com/LevYur/project/auth/pkg/constants"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"net/http"
+	"project/auth/internal/config"
+	"project/auth/pkg/constants"
 	"time"
 )
 

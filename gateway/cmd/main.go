@@ -17,15 +17,15 @@
 package main
 
 import (
-	_ "github.com/LevYur/project/gateway/docs"
-	"github.com/LevYur/project/gateway/internal/config"
-	"github.com/LevYur/project/gateway/internal/logger"
-	_ "github.com/LevYur/project/gateway/internal/metrics"
-	"github.com/LevYur/project/gateway/internal/server"
-	"github.com/LevYur/project/gateway/internal/validation"
-	"github.com/LevYur/project/gateway/pkg/constants"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
+	_ "project/gateway/docs"
+	"project/gateway/internal/config"
+	"project/gateway/internal/logger"
+	_ "project/gateway/internal/metrics"
+	"project/gateway/internal/server"
+	"project/gateway/internal/validation"
+	"project/gateway/pkg/constants"
 )
 
 func main() {

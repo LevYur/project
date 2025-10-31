@@ -3,8 +3,6 @@ package auth
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/LevYur/project/gateway/internal/config"
-	"github.com/LevYur/project/gateway/internal/validation"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
@@ -12,6 +10,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"project/gateway/internal/config"
+	"project/gateway/internal/validation"
 	"testing"
 	"time"
 )

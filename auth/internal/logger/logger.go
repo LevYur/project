@@ -2,8 +2,8 @@ package logger
 
 import (
 	"fmt"
-	"github.com/LevYur/project/auth/pkg/constants"
 	"go.uber.org/zap"
+	"project/auth/pkg/constants"
 )
 
 func InitLogger(env string) *zap.Logger {
