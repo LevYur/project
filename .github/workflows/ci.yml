@@ -33,7 +33,7 @@ jobs:
 
       # Сборка gateway
       - name: Build Gateway Docker image
-        run: docker build -t auth-service -f ./gateway/Dockerfile .
+        run: docker build -t gateway-service -f ./gateway/Dockerfile .
 
       # Сборка auth
       - name: Build Auth Docker image
