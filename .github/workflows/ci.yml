@@ -22,22 +22,11 @@ jobs:
       - name: Install dependencies
         run: go mod tidy -v
 
-      #- name: Run tests
-      #  run: go test ./...
-
-      #- name: Run linter
-      #  uses: golangci/golangci-lint-action@v6
-        #  with:
-        # version: latest
-        # args: --timeout=5m
-
-      # Сборка gateway
-      - name: Build Gateway Docker image
-        run: docker build -t gateway-service -f ./gateway/Dockerfile .
-
-      # Сборка auth
-      - name: Build Auth Docker image
-        run: docker build -t auth-service -f ./auth/Dockerfile .
+      # сборка обоих сервисов из одного Dockerfile
+      - name: Build Docker images
+        run: |
+          docker build -t gateway-service -f ./Dockerfile .
+          docker build -t auth-service -f ./Dockerfile .
 
       - name: Log in to DockerHub
         uses: docker/login-action@v3
