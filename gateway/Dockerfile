@@ -15,7 +15,7 @@ FROM alpine:3.20
 
 WORKDIR /app
 
-COPY --from=build /app/main .
+COPY --from=build /app/gateway-service .
 
 EXPOSE 7970
 

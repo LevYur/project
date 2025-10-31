@@ -15,7 +15,7 @@ FROM alpine:3.20
 
 WORKDIR /app
 
-COPY --from=build /app/main .
+COPY --from=build /app/auth-service .
 
 EXPOSE 7971
 
