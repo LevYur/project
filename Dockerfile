@@ -13,10 +13,10 @@ RUN go mod download
 COPY . .
 
 # строим бинарь gateway
-RUN CGO_ENABLED=0 GOOS=linux go build -o /app/gateway-service ./gateway/cmd/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -o /app/gateway-service ./project/gateway/cmd/main.go
 
 # строим бинарь auth
-RUN CGO_ENABLED=0 GOOS=linux go build -o /app/auth-service ./auth/cmd/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -o /app/auth-service ./project/auth/cmd/main.go
 
 # -------------------
 # Runtime stage
