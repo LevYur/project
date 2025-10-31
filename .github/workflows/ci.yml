@@ -7,7 +7,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  gateway:
+  build-and-test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -18,21 +18,31 @@ jobs:
         with:
           go-version: "1.24.5"
 
+      # tidy теперь выполняется один раз — общий go.mod
       - name: Install dependencies
-        working-directory: ./gateway
         run: go mod tidy
 
+      # тесты тоже теперь общие
       - name: Run tests
-        working-directory: ./gateway
-        run: go test $(go list ./... | grep -v internal/test/integration)
+        run: go test ./... -v
 
+      # линтер запускаем для всего проекта
       - name: Run linter
         uses: golangci/golangci-lint-action@v6
         with:
           version: latest
-          working-directory: ./gateway
+          args: --timeout=5m
+        continue-on-error: true
 
-      - name: Build Docker image
+  # --- Gateway Service ---
+  gateway:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build Docker image (gateway)
         run: docker build -t gateway-service ./gateway
 
       - name: Log in to DockerHub
@@ -41,38 +51,20 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Push Docker image
+      - name: Push Docker image (gateway)
         run: |
           docker tag gateway-service:latest ${{ secrets.DOCKERHUB_USERNAME }}/gateway-service:latest
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/gateway-service:latest
 
+  # --- Auth Service ---
   auth:
-    needs: gateway
+    needs: build-and-test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: "1.24.5"
-
-      - name: Install dependencies
-        working-directory: ./auth
-        run: go mod tidy
-
-      - name: Run linter
-        uses: golangci/golangci-lint-action@v6
-        with:
-          version: latest
-          working-directory: ./auth
-          args: >
-            --path-prefix=./auth
-            --timeout=5m
-        continue-on-error: true
-
-      - name: Build Docker image
+      - name: Build Docker image (auth)
         run: docker build -t auth-service ./auth
 
       - name: Log in to DockerHub
@@ -81,7 +73,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Push Docker image
+      - name: Push Docker image (auth)
         run: |
           docker tag auth-service:latest ${{ secrets.DOCKERHUB_USERNAME }}/auth-service:latest
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/auth-service:latest

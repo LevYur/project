@@ -1,8 +1,8 @@
 package server
 
 import (
-	"auth/internal/server/auth"
-	"auth/internal/server/users"
+	"github.com/LevYur/project/auth/internal/server/auth"
+	"github.com/LevYur/project/auth/internal/server/users"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	httpSwagger "github.com/swaggo/http-swagger"

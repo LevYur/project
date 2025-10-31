@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"auth/pkg/constants"
+	"github.com/LevYur/project/auth/pkg/constants"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )

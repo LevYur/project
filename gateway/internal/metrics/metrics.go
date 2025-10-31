@@ -7,7 +7,7 @@ var (
 		prometheus.CounterOpts{
 			Name:        "http_requests_total",
 			Help:        "Total HTTP requests",
-			ConstLabels: prometheus.Labels{"service": "gateway"},
+			ConstLabels: prometheus.Labels{"service": "github.com/LevYur/project/gateway"},
 		},
 		[]string{"method", "path", "status"},
 	)
@@ -25,28 +25,28 @@ var (
 		prometheus.CounterOpts{
 			Name:        "auth_refresh_success_total",
 			Help:        "Total success refresh access_token",
-			ConstLabels: prometheus.Labels{"service": "gateway"}},
+			ConstLabels: prometheus.Labels{"service": "github.com/LevYur/project/gateway"}},
 	)
 
 	AuthRefreshFailedTotal = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Name:        "auth_refresh_failed_total",
 			Help:        "Total failed refresh access_token",
-			ConstLabels: prometheus.Labels{"service": "gateway"}},
+			ConstLabels: prometheus.Labels{"service": "github.com/LevYur/project/gateway"}},
 		[]string{"reason"})
 
 	GatewayInvalidLoginRequestTotal = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name:        "gateway_invalid_login_request_total",
+			Name:        "github.com/LevYur/project/gateway_invalid_login_request_total",
 			Help:        "Total invalid login requests",
-			ConstLabels: prometheus.Labels{"service": "gateway"}},
+			ConstLabels: prometheus.Labels{"service": "github.com/LevYur/project/gateway"}},
 		[]string{"reason"})
 
 	GatewayInvalidRegisterRequestTotal = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name:        "gateway_invalid_register_request_total",
+			Name:        "github.com/LevYur/project/gateway_invalid_register_request_total",
 			Help:        "Total invalid register requests",
-			ConstLabels: prometheus.Labels{"service": "gateway"}},
+			ConstLabels: prometheus.Labels{"service": "github.com/LevYur/project/gateway"}},
 		[]string{"reason"})
 )
 

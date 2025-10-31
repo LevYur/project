@@ -17,13 +17,13 @@
 package main
 
 import (
-	_ "gateway/docs"
-	"gateway/internal/config"
-	"gateway/internal/logger"
-	_ "gateway/internal/metrics"
-	"gateway/internal/server"
-	"gateway/internal/validation"
-	"gateway/pkg/constants"
+	_ "github.com/LevYur/project/gateway/docs"
+	"github.com/LevYur/project/gateway/internal/config"
+	"github.com/LevYur/project/gateway/internal/logger"
+	_ "github.com/LevYur/project/gateway/internal/metrics"
+	"github.com/LevYur/project/gateway/internal/server"
+	"github.com/LevYur/project/gateway/internal/validation"
+	"github.com/LevYur/project/gateway/pkg/constants"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )

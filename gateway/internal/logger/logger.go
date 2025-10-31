@@ -2,14 +2,14 @@ package logger
 
 import (
 	"fmt"
-	"gateway/pkg/constants"
+	"github.com/LevYur/project/gateway/pkg/constants"
 	"go.uber.org/zap"
 )
 
 // InitLogger creates logger instance based on "env" from env. variables
 func InitLogger(env string) *zap.Logger {
 
-	const op = "gateway.logger.InitLogger"
+	const op = "github.com/LevYur/project/gateway.logger.InitLogger"
 
 	var cfg zap.Config
 
@@ -18,7 +18,7 @@ func InitLogger(env string) *zap.Logger {
 		cfg = zap.NewDevelopmentConfig() // text + stdout
 		cfg.Level = zap.NewAtomicLevelAt(zap.DebugLevel)
 		cfg.InitialFields = map[string]interface{}{
-			"service": "gateway",
+			"service": "github.com/LevYur/project/gateway",
 			"env":     constants.EnvLocal,
 		}
 
@@ -26,7 +26,7 @@ func InitLogger(env string) *zap.Logger {
 		cfg = zap.NewDevelopmentConfig()
 		cfg.Level = zap.NewAtomicLevelAt(zap.DebugLevel)
 		cfg.InitialFields = map[string]interface{}{
-			"service": "gateway",
+			"service": "github.com/LevYur/project/gateway",
 			"env":     constants.EnvDev,
 		}
 
@@ -34,7 +34,7 @@ func InitLogger(env string) *zap.Logger {
 		cfg = zap.NewProductionConfig()
 		cfg.Level = zap.NewAtomicLevelAt(zap.InfoLevel)
 		cfg.InitialFields = map[string]interface{}{
-			"service": "gateway",
+			"service": "github.com/LevYur/project/gateway",
 			"env":     constants.EnvProd,
 		}
 
@@ -42,7 +42,7 @@ func InitLogger(env string) *zap.Logger {
 		cfg = zap.NewProductionConfig()
 		cfg.Level = zap.NewAtomicLevelAt(zap.InfoLevel)
 		cfg.InitialFields = map[string]interface{}{
-			"service": "gateway",
+			"service": "github.com/LevYur/project/gateway",
 			"env":     constants.EnvProd,
 		}
 	}

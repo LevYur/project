@@ -1,8 +1,8 @@
 package users
 
 import (
-	"auth/pkg/constants"
 	"context"
+	"github.com/LevYur/project/auth/pkg/constants"
 	"go.uber.org/zap"
 	"time"
 )

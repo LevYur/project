@@ -3,8 +3,8 @@ package auth
 import (
 	"bytes"
 	"encoding/json"
-	"gateway/internal/config"
-	"gateway/internal/validation"
+	"github.com/LevYur/project/gateway/internal/config"
+	"github.com/LevYur/project/gateway/internal/validation"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"

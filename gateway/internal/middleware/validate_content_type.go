@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"gateway/pkg/constants"
+	"github.com/LevYur/project/gateway/pkg/constants"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"net/http"
@@ -10,7 +10,7 @@ import (
 func ValidateContentType(log *zap.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		const op = "gateway.middleware.ValidateContentType"
+		const op = "github.com/LevYur/project/gateway.middleware.ValidateContentType"
 
 		if c.Request.Method == http.MethodGet || c.Request.Method == http.MethodOptions ||
 			c.Request.Method == http.MethodHead {

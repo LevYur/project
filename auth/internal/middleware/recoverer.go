@@ -1,8 +1,8 @@
 package middleware
 
 import (
-	"auth/pkg/constants"
 	"bytes"
+	"github.com/LevYur/project/auth/pkg/constants"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"io"

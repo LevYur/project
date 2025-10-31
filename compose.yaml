@@ -1,7 +1,9 @@
 services:
 
   gateway-service:
-    build: ./gateway
+    build:
+      context: .
+      dockerfile: ./gateway/Dockerfile
     container_name: gateway-service
     restart: unless-stopped
     ports:
@@ -21,7 +23,9 @@ services:
 
   # ALL auth-service containers ===============================================
   auth-service:
-    build: ./auth
+    build:
+      context: .
+      dockerfile: ./auth/Dockerfile
     container_name: auth-service
     restart: unless-stopped
     ports:

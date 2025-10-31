@@ -1,12 +1,12 @@
 package auth
 
 import (
-	errs "auth/internal/errors"
-	"auth/internal/server/auth"
 	"context"
 	"database/sql"
 	"errors"
 	"fmt"
+	errs "github.com/LevYur/project/auth/internal/errors"
+	"github.com/LevYur/project/auth/internal/server/auth"
 	"github.com/jmoiron/sqlx"
 )
 

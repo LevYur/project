@@ -1,9 +1,9 @@
 package server
 
 import (
-	"gateway/internal/config"
-	"gateway/internal/middleware"
-	"gateway/internal/server/auth"
+	"github.com/LevYur/project/gateway/internal/config"
+	"github.com/LevYur/project/gateway/internal/middleware"
+	"github.com/LevYur/project/gateway/internal/server/auth"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	httpSwagger "github.com/swaggo/http-swagger"

@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"gateway/pkg/constants"
+	"github.com/LevYur/project/gateway/pkg/constants"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"net/http"
@@ -10,7 +10,7 @@ import (
 func Cors() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		const op = "gateway.middleware.Cors"
+		const op = "github.com/LevYur/project/gateway.middleware.Cors"
 
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 		c.Writer.Header().Set("Access-Control-Allow-Methods",

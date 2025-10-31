@@ -1,11 +1,11 @@
 package users
 
 import (
-	"auth/internal/server/users"
 	"context"
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/LevYur/project/auth/internal/server/users"
 	"github.com/jmoiron/sqlx"
 )
 

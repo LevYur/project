@@ -42,5 +42,5 @@ coverage.out
 **/config/.env.example
 
 # Linter configs (optional)
-.golangci.yml
-.golangci-lint*
+# .golangci.yml
+# .golangci-lint*

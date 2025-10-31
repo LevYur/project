@@ -1,16 +1,16 @@
 package users
 
 import (
-	"auth/internal/broker/rabbitmq"
-	errs "auth/internal/errors"
-	"auth/internal/server/users"
-	"auth/internal/service/tokens"
-	"auth/pkg/constants"
 	"context"
 	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/LevYur/project/auth/internal/broker/rabbitmq"
+	errs "github.com/LevYur/project/auth/internal/errors"
+	"github.com/LevYur/project/auth/internal/server/users"
+	"github.com/LevYur/project/auth/internal/service/tokens"
+	"github.com/LevYur/project/auth/pkg/constants"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"

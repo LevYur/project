@@ -6,9 +6,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"gateway/internal/config"
-	"gateway/internal/metrics"
-	"gateway/pkg/constants"
+	"github.com/LevYur/project/gateway/internal/config"
+	"github.com/LevYur/project/gateway/internal/metrics"
+	"github.com/LevYur/project/gateway/pkg/constants"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"go.uber.org/zap"
@@ -23,7 +23,7 @@ var privatePaths = map[string]struct{}{
 func AuthGuard(cfg *config.Config, log *zap.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		const op = "gateway.middleware.AuthGuard"
+		const op = "github.com/LevYur/project/gateway.middleware.AuthGuard"
 
 		logAny, exist := c.Get(constants.LoggerKey)
 		if exist {
@@ -194,7 +194,7 @@ func validateAccessToken(cfg *config.Config, token string, tokenType string) err
 func callRefreshEndpoint(ctx context.Context, refreshToken string,
 	cfg *config.Config, client *http.Client, log *zap.Logger) (*Tokens, error) {
 
-	const op = "gateway.middleware.AuthGuard.callRefreshEndpoint"
+	const op = "github.com/LevYur/project/gateway.middleware.AuthGuard.callRefreshEndpoint"
 
 	reqBody := map[string]string{
 		"refresh_token": refreshToken,

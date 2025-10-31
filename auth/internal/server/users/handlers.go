@@ -1,11 +1,11 @@
 package users
 
 import (
-	errs "auth/internal/errors"
-	"auth/internal/metrics"
-	"auth/pkg/constants"
 	"context"
 	"errors"
+	errs "github.com/LevYur/project/auth/internal/errors"
+	"github.com/LevYur/project/auth/internal/metrics"
+	"github.com/LevYur/project/auth/pkg/constants"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"net/http"

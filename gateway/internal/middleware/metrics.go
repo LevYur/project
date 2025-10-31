@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"fmt"
-	"gateway/internal/metrics"
+	"github.com/LevYur/project/gateway/internal/metrics"
 	"github.com/gin-gonic/gin"
 	"time"
 )

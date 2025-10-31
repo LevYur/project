@@ -211,8 +211,8 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "localhost:79701",
 	BasePath:         "/",
 	Schemes:          []string{},
-	Title:            "Gateway API",
-	Description:      "Gateway for user authentication and registration.",
+	Title:            "github.com/LevYur/project/gateway API",
+	Description:      "github.com/LevYur/project/gateway for user authentication and registration.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 }

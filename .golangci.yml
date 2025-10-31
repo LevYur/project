@@ -1,3 +1,5 @@
+# version: 2 # только для локального запуска
+
 run:
   timeout: 5m
 
@@ -13,11 +15,9 @@ linters-settings:
 
 issues:
   exclude-rules:
-    # исключаем ошибки errcheck в тестах
-    - path: _test\.go
+    - path: _test\.go # исключаем ошибки errcheck в тестах
       linters:
-        - errcheck
-    # исключаем vendor, docs, bin для всех линтеров
+        - errcheck    # исключаем vendor, docs, bin для всех линтеров
     - path: vendor
       linters:
         - govet

@@ -3,8 +3,8 @@ package middleware
 import (
 	"context"
 	"fmt"
-	"gateway/internal/config"
-	"gateway/pkg/constants"
+	"github.com/LevYur/project/gateway/internal/config"
+	"github.com/LevYur/project/gateway/pkg/constants"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"

@@ -1,12 +1,12 @@
 package auth
 
 import (
-	errs "auth/internal/errors"
-	"auth/internal/server/auth"
-	"auth/internal/service/tokens"
 	"context"
 	"errors"
 	"fmt"
+	errs "github.com/LevYur/project/auth/internal/errors"
+	"github.com/LevYur/project/auth/internal/server/auth"
+	"github.com/LevYur/project/auth/internal/service/tokens"
 	"golang.org/x/crypto/bcrypt"
 	"log"
 )

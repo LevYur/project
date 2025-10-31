@@ -46,7 +46,7 @@ type Database struct {
 }
 
 func MustLoad() *Config {
-	
+
 	var cfg Config
 
 	// settings from env variables (from docker)

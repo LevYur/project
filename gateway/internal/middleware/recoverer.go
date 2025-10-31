@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"gateway/pkg/constants"
+	"github.com/LevYur/project/gateway/pkg/constants"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"net/http"
