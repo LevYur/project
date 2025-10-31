@@ -6,9 +6,9 @@ WORKDIR /app
 COPY ../../go.mod ../../go.sum ./
 RUN go mod download
 
-COPY ./auth ./
+COPY ../../ ./
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o main ./cmd/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -o /app/auth-service ./auth/cmd/main.go
 
 # runtime stage
 FROM alpine:3.20

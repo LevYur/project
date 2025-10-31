@@ -6,9 +6,9 @@ WORKDIR /app
 COPY ../../go.mod ../../go.sum ./
 RUN go mod download
 
-COPY ./gateway ./
+COPY ../../ ./
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o main ./cmd/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -o /app/gateway-service ./gateway/cmd/main.go
 
 # runtime stage
 FROM alpine:3.20
