@@ -23,13 +23,20 @@ coverage.out
 **/vendor/
 **/node_modules/
 
-# Configs
+# Environment files
+
+# Ignore all environment files
 **/.env
 **/.env.*
+
+# Allow example configuration
+!**/.env.example
+
+# Ignore sensitive configs
 **/config/.env
 **/config/.env.local
-**/config/.env.prod
 **/config/.env.dev
+**/config/.env.prod
 
 # Ignore database files
 **/data/

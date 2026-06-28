@@ -1,9 +1,10 @@
 package config
 
 import (
-	"github.com/ilyakaznacheev/cleanenv"
 	"log"
 	"time"
+
+	"github.com/ilyakaznacheev/cleanenv"
 )
 
 type Config struct {
@@ -27,7 +28,7 @@ type HTTPServer struct {
 type Auth struct {
 	JWTSecret       string        `env:"JWT_SECRET"`
 	AccessTokenTTL  time.Duration `env:"ACCESS_TOKEN_TTL" env-default:"30m"`
-	RefreshTokenTTL time.Duration `env:"ACCESS_TOKEN_TTL" env-default:"168h"`
+	RefreshTokenTTL time.Duration `env:"REFRESH_TOKEN_TTL" env-default:"168h"`
 }
 
 type Services struct {
