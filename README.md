@@ -163,30 +163,64 @@ git clone https://github.com/LevYur/project.git
 cd project
 ```
 
+---
+
 ## Настройка окружения
 
-Для каждого сервиса необходимо создать файл конфигурации на основе шаблона:
+Для каждого сервиса создайте файл конфигурации на основе шаблона.
+
+Например:
 
 ```text
-config/.env.example
-        ↓
-config/.env.local
+gateway/config/.env.example  →  gateway/config/.env.local
+auth/config/.env.example     →  auth/config/.env.local
+products/config/.env.example →  products/config/.env.local
+cart/config/.env.example     →  cart/config/.env.local
+```
+
+При необходимости измените параметры подключения (например, пароли PostgreSQL или адреса сервисов).
+
+---
+
+## Требования перед запуском проекта
+
+Перед запуском убедитесь, что установлены:
+
+- Go 1.24+
+- Docker
+- Docker Compose
+- Make
+
+## Запуск проекта
+
+Поднять инфраструктуру и все сервисы:
+
+```bash
+make up
 ```
 
 ---
 
-## Запуск инфраструктуры
+## Просмотр логов
 
 ```bash
-docker compose -f compose.infra.yaml up -d
+make logs
 ```
 
 ---
 
-## Запуск сервисов
+## Запуск тестов
 
 ```bash
-docker compose up
+make test
+```
+
+---
+
+## Остановка проекта
+
+```bash
+make down
 ```
 
 После запуска будут доступны:

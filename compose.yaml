@@ -7,7 +7,7 @@ services:
     ports:
       - "7970:7970"
     env_file:
-      - ./gateway/config/.env.prod
+      - ./gateway/config/.env.local
     networks:
       - project
     #depends_on:
@@ -27,7 +27,7 @@ services:
     ports:
       - "7971:7971"
     env_file:
-      - ./auth/config/.env.prod
+      - ./auth/config/.env.local
     depends_on:
       - auth-db
       - auth-migrate
@@ -45,7 +45,7 @@ services:
       start_period: 5s
     restart: always
     env_file:
-      - ./auth/config/.env.prod
+      - ./auth/config/.env.local
     ports:
       - "5432:5432"
     volumes:
@@ -56,7 +56,7 @@ services:
   auth-migrate:
     image: migrate/migrate:v4.16.2
     env_file:
-      - ./auth/config/.env.prod
+      - ./auth/config/.env.local
     entrypoint: [ "/bin/sh", "/migrations/run.sh" ]
     volumes:
       - ./auth/storage/migrations:/migrations
@@ -72,7 +72,7 @@ services:
     build: ./cart
     container_name: cart-service
     env_file:
-      - ./cart/config/.env.prod
+      - ./cart/config/.env.local
     depends_on:
       cart-db:
         condition: service_healthy
@@ -86,7 +86,7 @@ services:
     container_name: cart-db
     restart: always
     env_file:
-      - ./cart/config/.env.prod
+      - ./cart/config/.env.local
     ports:
       - "5433:5432"
     volumes:
@@ -106,7 +106,7 @@ services:
     build: ./products
     container_name: products-service
     env_file:
-      - ./products/config/.env.prod
+      - ./products/config/.env.local
     depends_on:
       products-db:
         condition: service_healthy
@@ -120,7 +120,7 @@ services:
     container_name: products-db
     restart: always
     env_file:
-      - ./products/config/.env.prod
+      - ./products/config/.env.local
     ports:
       - "5434:5432"
     volumes:
