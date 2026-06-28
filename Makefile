@@ -1,4 +1,3 @@
-```makefile
 .PHONY: help env infra app up down logs ps test
 
 # -------------------------------------------
@@ -58,4 +57,3 @@ ps:
 
 test:
 	go test ./...
-```
