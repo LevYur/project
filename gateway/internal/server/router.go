@@ -1,17 +1,20 @@
 package server
 
 import (
+	"gateway/internal/clients/cartclient"
+	"gateway/internal/config"
+	"gateway/internal/middleware"
+	"gateway/internal/server/auth"
+	"gateway/internal/server/cart"
+	"gateway/internal/server/products"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	httpSwagger "github.com/swaggo/http-swagger"
 	"go.uber.org/zap"
 	"net/http"
-	"project/gateway/internal/config"
-	"project/gateway/internal/middleware"
-	"project/gateway/internal/server/auth"
 )
 
-func SetupRouter(cfg *config.Config, log *zap.Logger) *gin.Engine {
+func SetupRouter(cfg *config.Config, cartClient *cartclient.CartClient, log *zap.Logger) *gin.Engine {
 
 	router := gin.New()
 
@@ -41,24 +44,15 @@ func SetupRouter(cfg *config.Config, log *zap.Logger) *gin.Engine {
 
 	api := router.Group("/api")
 
+	// utility routes
 	api.GET("/gateway/swagger/*any", gin.WrapH(httpSwagger.WrapHandler))
 	api.GET("/gateway/metrics", gin.WrapH(promhttp.Handler()))
 
-	// auth router + handlers
+	// routes
 	auth.RegisterRoutes(cfg, api.Group("/auth"), log)
-
-	// products router + handlers
-	// products.RegisterRoutes(api.Group("/products"), log)
-
-	// users router + handlers
+	products.RegisterRoutes(cfg, api.Group("/products"), log)
 	// users.RegisterRoutes(api.Group("/users"), log)
-
-	// создать middleware для JWT только для ручек basket и orders
-
-	// basket router + handlers
-	// basket.RegisterRoutes(api.Group("/basket"), log)
-
-	// orders router + handlers
+	cart.RegisterRoutes(cartClient, api.Group("/cart"), log)
 	// orders.RegisterRoutes(api.Group("/orders"), log)
 
 	return router

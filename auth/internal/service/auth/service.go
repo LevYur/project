@@ -1,14 +1,14 @@
 package auth
 
 import (
+	errs "auth/internal/errors"
+	"auth/internal/server/auth"
+	"auth/internal/service/tokens"
 	"context"
 	"errors"
 	"fmt"
 	"golang.org/x/crypto/bcrypt"
 	"log"
-	errs "project/auth/internal/errors"
-	"project/auth/internal/server/auth"
-	"project/auth/internal/service/tokens"
 )
 
 type AuthRepo interface {

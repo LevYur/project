@@ -1,16 +1,16 @@
 package middleware
 
 import (
+	"gateway/pkg/constants"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"net/http"
-	"project/gateway/pkg/constants"
 )
 
 func Cors() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		const op = "project/gateway.middleware.Cors"
+		const op = "gateway.middleware.Cors"
 
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 		c.Writer.Header().Set("Access-Control-Allow-Methods",
@@ -30,12 +30,12 @@ func Cors() gin.HandlerFunc {
 					zap.String(constants.LogMethodKey, c.Request.Method),
 					zap.String(constants.LogPathKey, c.FullPath()),
 					zap.String(constants.LogIPKey, c.ClientIP()))
+
+				c.AbortWithStatus(http.StatusNoContent)
+				return
 			}
 
-			c.AbortWithStatus(http.StatusNoContent)
-			return
+			c.Next()
 		}
-
-		c.Next()
 	}
 }

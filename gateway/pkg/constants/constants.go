@@ -7,10 +7,16 @@ const (
 	EnvProd  = "prod"
 )
 
+// keys for context.Context
+type CtxKey string
+
+var CtxRequestIDKey CtxKey = "requestID"
+
 // keys for gin.Context.Get
 const (
 	RequestIDKey = "requestID"
 	LoggerKey    = "logger"
+	UserIDKey    = "userID"
 )
 
 // keys for zap.Logger
@@ -29,4 +35,7 @@ const (
 	LogUserIDKey       = "user_id"
 	LogResponseBodyKey = "response_body"
 	LogRequestBodyKey  = "request_body"
+	LogProductIDKey    = "product_id"
+	LogQuantityKey     = "quantity"
+	LogMessageKey      = "message"
 )

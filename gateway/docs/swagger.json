@@ -1,13 +1,13 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "Gateway for user authentication and registration.",
+        "description": "Gateway service validates and routes incoming HTTP requests,",
         "title": "Gateway API",
         "termsOfService": "http://swagger.io/terms/",
         "contact": {
             "name": "Lev U.",
-            "url": "//",
-            "email": "-"
+            "url": "https://github.com/LevYur/project.git",
+            "email": "lev.uy@mail.ru"
         },
         "license": {
             "name": "Apache 2.0",
@@ -15,11 +15,12 @@
         },
         "version": "1.0"
     },
-    "host": "localhost:79701",
-    "basePath": "/",
+    "host": "localhost:7970",
+    "basePath": "/api/gateway/",
     "paths": {
         "/auth/login": {
             "post": {
+                "description": "Authenticate user and return access \u0026 refresh tokens",
                 "consumes": [
                     "application/json"
                 ],
@@ -37,7 +38,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/auth.LoginRequest"
+                            "$ref": "#/definitions/internal_server_auth.LoginRequest"
                         }
                     }
                 ],
@@ -45,7 +46,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/auth.LoginResponse"
+                            "$ref": "#/definitions/internal_server_auth.LoginResponse"
                         }
                     },
                     "400": {
@@ -71,6 +72,7 @@
         },
         "/auth/register": {
             "post": {
+                "description": "Authenticate user and return access \u0026 refresh tokens",
                 "consumes": [
                     "application/json"
                 ],
@@ -88,7 +90,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/auth.RegisterRequest"
+                            "$ref": "#/definitions/internal_server_auth.RegisterRequest"
                         }
                     }
                 ],
@@ -96,7 +98,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/auth.RegisterResponse"
+                            "$ref": "#/definitions/internal_server_auth.RegisterResponse"
                         }
                     },
                     "400": {
@@ -119,10 +121,213 @@
                     }
                 }
             }
+        },
+        "/cart": {
+            "get": {
+                "description": "Get all items from user's cart by user ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cart"
+                ],
+                "summary": "Get all items from user's cart",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Permission denied"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "408": {
+                        "description": "Timeout"
+                    },
+                    "500": {
+                        "description": "Internal error"
+                    },
+                    "503": {
+                        "description": "Service unavailable"
+                    }
+                }
+            },
+            "delete": {
+                "description": "Clear all items from user's cart by user ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cart"
+                ],
+                "summary": "Clear all items from user's cart",
+                "responses": {
+                    "200": {
+                        "description": "success: true",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "boolean"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Permission denied"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "408": {
+                        "description": "Timeout"
+                    },
+                    "500": {
+                        "description": "Internal error"
+                    },
+                    "503": {
+                        "description": "Service unavailable"
+                    }
+                }
+            }
+        },
+        "/cart/add": {
+            "post": {
+                "description": "Add item to user's cart by product ID + quantity",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cart"
+                ],
+                "summary": "Add item to user's cart",
+                "parameters": [
+                    {
+                        "description": "Add to cart payload",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_server_cart.AddToCartRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success: true",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "boolean"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Permission denied"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "408": {
+                        "description": "Timeout"
+                    },
+                    "500": {
+                        "description": "Internal error"
+                    },
+                    "503": {
+                        "description": "Service unavailable"
+                    }
+                }
+            }
+        },
+        "/cart/delete/{product_id}": {
+            "delete": {
+                "description": "Remove item from user's cart by product ID. Removes all quantity of that item",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cart"
+                ],
+                "summary": "Remove item from user's cart",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Product ID to remove",
+                        "name": "product_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success: true",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "boolean"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Permission denied"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "408": {
+                        "description": "Timeout"
+                    },
+                    "500": {
+                        "description": "Internal error"
+                    },
+                    "503": {
+                        "description": "Service unavailable"
+                    }
+                }
+            }
         }
     },
     "definitions": {
-        "auth.LoginRequest": {
+        "internal_server_auth.LoginRequest": {
             "type": "object",
             "required": [
                 "email",
@@ -137,7 +342,7 @@
                 }
             }
         },
-        "auth.LoginResponse": {
+        "internal_server_auth.LoginResponse": {
             "type": "object",
             "properties": {
                 "access_token": {
@@ -151,10 +356,11 @@
                 }
             }
         },
-        "auth.RegisterRequest": {
+        "internal_server_auth.RegisterRequest": {
             "type": "object",
             "required": [
                 "email",
+                "name",
                 "password",
                 "phone"
             ],
@@ -166,23 +372,27 @@
                     "type": "string"
                 },
                 "fathers_name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 50
                 },
                 "name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 50
                 },
                 "password": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 8
                 },
                 "phone": {
                     "type": "string"
                 },
                 "surname": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 50
                 }
             }
         },
-        "auth.RegisterResponse": {
+        "internal_server_auth.RegisterResponse": {
             "type": "object",
             "properties": {
                 "access_token": {
@@ -192,6 +402,21 @@
                     "type": "string"
                 },
                 "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "internal_server_cart.AddToCartRequest": {
+            "type": "object",
+            "required": [
+                "product_id",
+                "quantity"
+            ],
+            "properties": {
+                "product_id": {
+                    "type": "string"
+                },
+                "quantity": {
                     "type": "integer"
                 }
             }

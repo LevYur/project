@@ -6,41 +6,59 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"gateway/internal/config"
+	"gateway/internal/metrics"
+	"gateway/pkg/constants"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"go.uber.org/zap"
 	"net/http"
-	"project/gateway/internal/config"
-	"project/gateway/internal/metrics"
-	"project/gateway/pkg/constants"
+	"strconv"
 	"strings"
 )
 
-var privatePaths = map[string]struct{}{
-	"/api/auth/refresh": {},
+var privatePaths = map[string]map[string]struct{}{
+	"/api/auth/refresh":            {http.MethodPost: {}},
+	"/api/cart/add":                {http.MethodPost: {}},
+	"/api/cart/delete/:product_id": {http.MethodDelete: {}},
+	"/api/cart":                    {http.MethodGet: {}, http.MethodDelete: {}},
+	"/api/products":                {http.MethodPost: {}},
+	"/api/products/:product_id":    {http.MethodPut: {}, http.MethodPatch: {}, http.MethodDelete: {}},
 }
 
 func AuthGuard(cfg *config.Config, log *zap.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		const op = "project/gateway.middleware.AuthGuard"
+		const op = "gateway.middleware.AuthGuard"
 
 		logAny, exist := c.Get(constants.LoggerKey)
 		if exist {
 			log = logAny.(*zap.Logger)
 		}
 
-		path := c.Request.URL.Path
-		_, ok := privatePaths[path]
-		if !ok {
+		path := c.FullPath()
+		method := c.Request.Method
+
+		methods, exists := privatePaths[path]
+		if !exists {
+			log.Info("👉" + method + " / " + path + " is public path, calling handler")
 			c.Next()
 			return
 		}
 
+		_, needAuth := methods[method]
+		if !needAuth {
+			log.Info("👉" + method + " / " + path + " is public path, calling handler")
+			c.Next()
+			return
+		}
+
+		log.Info(fmt.Sprintf("❗" + path + " is private path, checking tokens"))
+
 		accessToken := extractAccessToken(c.Request)
 		if accessToken == "" {
 
-			log.Warn("access token is empty",
+			log.Warn("❗access token is empty",
 				zap.String(constants.LogComponentKey, op),
 				zap.String(constants.LogMethodKey, c.Request.Method),
 				zap.String(constants.LogPathKey, c.FullPath()),
@@ -51,15 +69,17 @@ func AuthGuard(cfg *config.Config, log *zap.Logger) gin.HandlerFunc {
 		}
 
 		// just for access token, not refresh
-		err := validateAccessToken(cfg, accessToken, "access")
+		userID, err := validateAccessToken(cfg, accessToken, "access")
 		if err == nil {
-			c.Next() // if token valid
+			log.Info(fmt.Sprintf("✅ access token is valid, calling handler"))
+			c.Set(constants.UserIDKey, userID)
 
+			c.Next() // if token valid
 			return
 		}
 
 		if err != nil {
-			log.Warn("access token is invalid",
+			log.Warn("❗access token is invalid",
 				zap.String(constants.LogComponentKey, op),
 				zap.Error(err),
 				zap.String(constants.LogMethodKey, c.Request.Method),
@@ -70,7 +90,7 @@ func AuthGuard(cfg *config.Config, log *zap.Logger) gin.HandlerFunc {
 		refreshToken, err := c.Cookie("refresh_token")
 		if err != nil || refreshToken == "" {
 
-			log.Warn("missing or empty refresh token",
+			log.Warn("❌ missing or empty refresh token",
 				zap.String(constants.LogComponentKey, op),
 				zap.Error(err),
 				zap.String(constants.LogMethodKey, c.Request.Method),
@@ -80,6 +100,8 @@ func AuthGuard(cfg *config.Config, log *zap.Logger) gin.HandlerFunc {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 			return
 		}
+
+		log.Info(fmt.Sprintf("✅ refresh token is valid, calling refresh token function"))
 
 		ctx := c.Request.Context()
 
@@ -100,7 +122,7 @@ func AuthGuard(cfg *config.Config, log *zap.Logger) gin.HandlerFunc {
 
 			if errors.Is(err, context.DeadlineExceeded) {
 
-				log.Error("timeout",
+				log.Error("❌ timeout",
 					zap.Error(err),
 					zap.String(constants.LogComponentKey, op),
 					zap.Any("timeout", gatewayHTTPClient.Timeout),
@@ -110,7 +132,7 @@ func AuthGuard(cfg *config.Config, log *zap.Logger) gin.HandlerFunc {
 				return
 			}
 
-			log.Warn("error: send refresh token to auth-service",
+			log.Error("❌ error: send refresh token to auth-service",
 				zap.String(constants.LogComponentKey, op),
 				zap.Error(err),
 				zap.String(constants.LogMethodKey, c.Request.Method),
@@ -120,6 +142,9 @@ func AuthGuard(cfg *config.Config, log *zap.Logger) gin.HandlerFunc {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 			return
 		}
+
+		// add userID into gin.context
+		c.Set(constants.UserIDKey, newTokens.UserID)
 
 		// SETTING NEW TOKENS ==========================================================
 
@@ -134,7 +159,7 @@ func AuthGuard(cfg *config.Config, log *zap.Logger) gin.HandlerFunc {
 
 		c.SetSameSite(http.SameSiteNoneMode)
 
-		log.Info("access token refreshed",
+		log.Info("✅ access token refreshed",
 			zap.String(constants.LogPathKey, c.FullPath()),
 			zap.String(constants.LogIPKey, c.ClientIP()),
 			zap.Int(constants.LogUserIDKey, newTokens.UserID),
@@ -159,7 +184,7 @@ func extractAccessToken(req *http.Request) string {
 	return parts[1]
 }
 
-func validateAccessToken(cfg *config.Config, token string, tokenType string) error {
+func validateAccessToken(cfg *config.Config, token string, tokenType string) (int, error) {
 
 	tokenInfo, err := jwt.ParseWithClaims(token, jwt.MapClaims{}, func(tokenInfo *jwt.Token) (any, error) {
 
@@ -172,29 +197,39 @@ func validateAccessToken(cfg *config.Config, token string, tokenType string) err
 	})
 
 	if err != nil {
-		return err
+		return -1, err
 	}
 
 	if !tokenInfo.Valid {
-		return fmt.Errorf("token invalid or expired: %w", err)
+		return -1, fmt.Errorf("token invalid or expired: %w", err)
 	}
 
 	claims, ok := tokenInfo.Claims.(jwt.MapClaims)
 	if !ok {
-		return fmt.Errorf("invalid token claims")
+		return -1, fmt.Errorf("invalid token claims")
 	}
 
 	if claims["type"] != tokenType {
-		return fmt.Errorf("token type mismatch")
+		return -1, fmt.Errorf("token type mismatch")
 	}
 
-	return nil
+	sub, ok := claims["sub"].(string)
+	if !ok {
+		return -1, fmt.Errorf("invalid sub / user id claim")
+	}
+
+	userID, err := strconv.Atoi(sub)
+	if err != nil {
+		return -1, fmt.Errorf("invalid sub / user id format: %v", err)
+	}
+
+	return userID, nil // откуда взять userID здесь?
 }
 
 func callRefreshEndpoint(ctx context.Context, refreshToken string,
 	cfg *config.Config, client *http.Client, log *zap.Logger) (*Tokens, error) {
 
-	const op = "project/gateway.middleware.AuthGuard.callRefreshEndpoint"
+	const op = "gateway.middleware.AuthGuard.callRefreshEndpoint"
 
 	reqBody := map[string]string{
 		"refresh_token": refreshToken,

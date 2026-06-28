@@ -11,6 +11,8 @@ type Config struct {
 	HTTPServer
 	Auth
 	Services
+	GRPCServices
+	GRPCServer
 }
 
 type HTTPServer struct {
@@ -29,12 +31,26 @@ type Auth struct {
 }
 
 type Services struct {
-	AuthServiceAddr     string `env:"AUTH_SERVICE_ADDR"`
-	ProductsServiceAddr string `env:"PRODUCTS_SERVICE_ADDR"`
-	UsersServiceAddr    string `env:"USERS_SERVICE_ADDR"`
-	BasketServiceAddr   string `env:"BASKET_SERVICE_ADDR"`
-	OrdersServiceAddr   string `env:"ORDERS_SERVICE_ADDR"`
-	NotsServiceAddr     string `env:"NOTS_SERVICE_ADDR"`
+	AuthServiceAddr     string `env:"HTTP_AUTH_SERVICE_ADDR"`
+	ProductsServiceAddr string `env:"HTTP_PRODUCTS_SERVICE_ADDR"`
+	UsersServiceAddr    string `env:"HTTP_USERS_SERVICE_ADDR"`
+	CartServiceAddr     string `env:"HTTP_CART_SERVICE_ADDR"`
+	OrdersServiceAddr   string `env:"HTTP_ORDERS_SERVICE_ADDR"`
+	NotsServiceAddr     string `env:"HTTP_NOTS_SERVICE_ADDR"`
+}
+
+type GRPCServices struct {
+	AuthServiceGRPCAddr     string `env:"RPC_AUTH_SERVICE_ADDR"`
+	ProductsServiceGRPCAddr string `env:"RPC_PRODUCTS_SERVICE_ADDR"`
+	UsersServiceGRPCAddr    string `env:"RPC_USERS_SERVICE_ADDR"`
+	CartServiceGRPCAddr     string `env:"RPC_CART_SERVICE_ADDR"`
+	OrdersServiceGRPCAddr   string `env:"RPC_ORDERS_SERVICE_ADDR"`
+	NotsServiceGRPCAddr     string `env:"RPC_NOTS_SERVICE_ADDR"`
+}
+
+type GRPCServer struct {
+	DialTimeout time.Duration `env:"RPC_DIAL_TIMEOUT" env-default:"3s"`
+	Retry       int           `env:"RPC_RETRY" env-default:"3"`
 }
 
 func MustLoad() *Config {

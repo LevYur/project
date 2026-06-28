@@ -1,6 +1,6 @@
-basePath: /
+basePath: /api/gateway/
 definitions:
-  auth.LoginRequest:
+  internal_server_auth.LoginRequest:
     properties:
       email:
         type: string
@@ -10,7 +10,7 @@ definitions:
     - email
     - password
     type: object
-  auth.LoginResponse:
+  internal_server_auth.LoginResponse:
     properties:
       access_token:
         type: string
@@ -19,28 +19,33 @@ definitions:
       user_id:
         type: integer
     type: object
-  auth.RegisterRequest:
+  internal_server_auth.RegisterRequest:
     properties:
       birth_date:
         type: string
       email:
         type: string
       fathers_name:
+        maxLength: 50
         type: string
       name:
+        maxLength: 50
         type: string
       password:
+        minLength: 8
         type: string
       phone:
         type: string
       surname:
+        maxLength: 50
         type: string
     required:
     - email
+    - name
     - password
     - phone
     type: object
-  auth.RegisterResponse:
+  internal_server_auth.RegisterResponse:
     properties:
       access_token:
         type: string
@@ -49,13 +54,23 @@ definitions:
       user_id:
         type: integer
     type: object
-host: localhost:79701
+  internal_server_cart.AddToCartRequest:
+    properties:
+      product_id:
+        type: string
+      quantity:
+        type: integer
+    required:
+    - product_id
+    - quantity
+    type: object
+host: localhost:7970
 info:
   contact:
-    email: '-'
+    email: lev.uy@mail.ru
     name: Lev U.
-    url: //
-  description: Gateway for user authentication and registration.
+    url: https://github.com/LevYur/project.git
+  description: Gateway service validates and routes incoming HTTP requests,
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
@@ -67,20 +82,21 @@ paths:
     post:
       consumes:
       - application/json
+      description: Authenticate user and return access & refresh tokens
       parameters:
       - description: Login credentials
         in: body
         name: loginRequest
         required: true
         schema:
-          $ref: '#/definitions/auth.LoginRequest'
+          $ref: '#/definitions/internal_server_auth.LoginRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/auth.LoginResponse'
+            $ref: '#/definitions/internal_server_auth.LoginResponse'
         "400":
           description: Invalid request
           schema:
@@ -100,20 +116,21 @@ paths:
     post:
       consumes:
       - application/json
+      description: Authenticate user and return access & refresh tokens
       parameters:
       - description: Register credentials
         in: body
         name: registerRequest
         required: true
         schema:
-          $ref: '#/definitions/auth.RegisterRequest'
+          $ref: '#/definitions/internal_server_auth.RegisterRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/auth.RegisterResponse'
+            $ref: '#/definitions/internal_server_auth.RegisterResponse'
         "400":
           description: Invalid request
           schema:
@@ -129,4 +146,139 @@ paths:
       summary: User register
       tags:
       - auth
+  /cart:
+    delete:
+      consumes:
+      - application/json
+      description: Clear all items from user's cart by user ID
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'success: true'
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+        "400":
+          description: Invalid request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Permission denied
+        "404":
+          description: Not found
+        "408":
+          description: Timeout
+        "500":
+          description: Internal error
+        "503":
+          description: Service unavailable
+      summary: Clear all items from user's cart
+      tags:
+      - cart
+    get:
+      consumes:
+      - application/json
+      description: Get all items from user's cart by user ID
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Invalid request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Permission denied
+        "404":
+          description: Not found
+        "408":
+          description: Timeout
+        "500":
+          description: Internal error
+        "503":
+          description: Service unavailable
+      summary: Get all items from user's cart
+      tags:
+      - cart
+  /cart/add:
+    post:
+      consumes:
+      - application/json
+      description: Add item to user's cart by product ID + quantity
+      parameters:
+      - description: Add to cart payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_server_cart.AddToCartRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'success: true'
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+        "400":
+          description: Invalid request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Permission denied
+        "404":
+          description: Not found
+        "408":
+          description: Timeout
+        "500":
+          description: Internal error
+        "503":
+          description: Service unavailable
+      summary: Add item to user's cart
+      tags:
+      - cart
+  /cart/delete/{product_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove item from user's cart by product ID. Removes all quantity
+        of that item
+      parameters:
+      - description: Product ID to remove
+        in: path
+        name: product_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'success: true'
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+        "400":
+          description: Invalid request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Permission denied
+        "404":
+          description: Not found
+        "408":
+          description: Timeout
+        "500":
+          description: Internal error
+        "503":
+          description: Service unavailable
+      summary: Remove item from user's cart
+      tags:
+      - cart
 swagger: "2.0"

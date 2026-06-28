@@ -1,12 +1,12 @@
 package users
 
 import (
+	"auth/internal/server/users"
 	"context"
 	"database/sql"
 	"errors"
 	"fmt"
 	"github.com/jmoiron/sqlx"
-	"project/auth/internal/server/users"
 )
 
 type Repo struct {

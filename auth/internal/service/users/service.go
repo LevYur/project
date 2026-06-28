@@ -1,6 +1,11 @@
 package users
 
 import (
+	"auth/internal/broker/rabbitmq"
+	errs "auth/internal/errors"
+	"auth/internal/server/users"
+	"auth/internal/service/tokens"
+	"auth/pkg/constants"
 	"context"
 	"database/sql"
 	"encoding/json"
@@ -9,11 +14,6 @@ import (
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
-	"project/auth/internal/broker/rabbitmq"
-	errs "project/auth/internal/errors"
-	"project/auth/internal/server/users"
-	"project/auth/internal/service/tokens"
-	"project/auth/pkg/constants"
 )
 
 type UsersRepo interface {

@@ -1,12 +1,12 @@
 package middleware
 
 import (
+	"auth/pkg/constants"
 	"bytes"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"io"
 	"net/http"
-	"project/auth/pkg/constants"
 )
 
 func Recoverer(log *zap.Logger) gin.HandlerFunc {

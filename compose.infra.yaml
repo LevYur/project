@@ -1,5 +1,80 @@
 services:
 
+  redis-service:
+    image: redis:8.2.3
+    container_name: redis-service
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - project
+
+
+  kafka-1:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: kafka-1
+    restart: unless-stopped
+    ports:
+      - "19092:9092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka-1:9093,2@kafka-2:9093,3@kafka-3:9093
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-1:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LOG4J_LOGGERS: "org.apache.kafka=WARN"
+      CLUSTER_ID: "TvgU7WsG0ycedQiZewEdjw"
+    volumes:
+      - kafka_data_1:/var/lib/kafka/data
+    networks:
+      - project
+
+
+  kafka-2:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: kafka-2
+    restart: unless-stopped
+    ports:
+      - "29092:9092"
+    environment:
+      KAFKA_NODE_ID: 2
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka-1:9093,2@kafka-2:9093,3@kafka-3:9093
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-2:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LOG4J_LOGGERS: "org.apache.kafka=WARN"
+      CLUSTER_ID: "TvgU7WsG0ycedQiZewEdjw"
+    volumes:
+      - kafka_data_2:/var/lib/kafka/data
+    networks:
+      - project
+
+
+  kafka-3:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: kafka-3
+    restart: unless-stopped
+    ports:
+      - "39092:9092"
+    environment:
+      KAFKA_NODE_ID: 3
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka-1:9093,2@kafka-2:9093,3@kafka-3:9093
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-3:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LOG4J_LOGGERS: "org.apache.kafka=WARN"
+      CLUSTER_ID: "TvgU7WsG0ycedQiZewEdjw"
+    volumes:
+      - kafka_data_3:/var/lib/kafka/data
+    networks:
+      - project
+
+
   rabbitmq-service:
     image: rabbitmq:3.13-management
     container_name: rabbitmq-service
@@ -78,3 +153,7 @@ volumes:
   promtail_data:
   loki_data:
   grafana_data:
+  kafka_data_1:
+  kafka_data_2:
+  kafka_data_3:
+  redis_data:

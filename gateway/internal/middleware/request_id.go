@@ -1,9 +1,10 @@
 package middleware
 
 import (
+	"context"
+	"gateway/pkg/constants"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"project/gateway/pkg/constants"
 )
 
 func RequestID() gin.HandlerFunc {
@@ -14,7 +15,10 @@ func RequestID() gin.HandlerFunc {
 			reqID = uuid.NewString()
 		}
 
-		c.Set(constants.RequestIDKey, reqID) // add into context.Context
+		c.Set(constants.RequestIDKey, reqID) // add into gin.Context
+
+		ctx := context.WithValue(c.Request.Context(), constants.CtxRequestIDKey, reqID)
+		c.Request = c.Request.WithContext(ctx) // add into context.Context
 
 		c.Writer.Header().Set("X-Request-ID", reqID) // add into Header
 

@@ -1,13 +1,13 @@
 package auth
 
 import (
+	errs "auth/internal/errors"
+	"auth/internal/server/auth"
 	"context"
 	"database/sql"
 	"errors"
 	"fmt"
 	"github.com/jmoiron/sqlx"
-	errs "project/auth/internal/errors"
-	"project/auth/internal/server/auth"
 )
 
 type Repo struct {

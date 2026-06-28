@@ -1,14 +1,14 @@
 package auth
 
 import (
+	errs "auth/internal/errors"
+	"auth/internal/metrics"
+	"auth/pkg/constants"
 	"context"
 	"errors"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"net/http"
-	errs "project/auth/internal/errors"
-	"project/auth/internal/metrics"
-	"project/auth/pkg/constants"
 )
 
 type AuthService interface {
@@ -24,19 +24,19 @@ func NewHandler(service AuthService) *Handler {
 	return &Handler{authService: service}
 }
 
-// Login godoc
-// @Summary User login
-// @Description Authenticate user with email and password. Returns access and refresh tokens on success.
-// @Tags auth
-// @Accept json
-// @Produce json
+// Login         godoc
+// @Summary      User login
+// @Description  Authenticate user with email and password. Returns access and refresh tokens on success.
+// @Tags         auth
+// @Accept       json
+// @Produce      json
 // @Param        loginRequest  body      LoginRequest  true  "Login credentials"
 // @Success      200  {object}  LoginResponse
 // @Failure      400  {object}  map[string]string  "invalid request payload"
 // @Failure      401  {object}  map[string]string  "invalid email or password"
 // @Failure      404  {object}  map[string]string  "user not found"
 // @Failure      500  {object}  map[string]string  "internal server error"
-// @Router       /auth/login [post]
+// @Router       /login [post]
 func (h *Handler) Login(c *gin.Context) {
 
 	const op = "auth.server.auth.Login"
@@ -95,18 +95,18 @@ func (h *Handler) Login(c *gin.Context) {
 	metrics.AuthLoginSuccessTotal.Inc() //prometheus
 }
 
-// Refresh godoc
-// @Summary Refresh tokens
-// @Description Exchange a valid refresh token for a new pair of access and refresh tokens.
-// @Tags auth
-// @Accept json
-// @Produce json
+// Refresh       godoc
+// @Summary      Refresh tokens
+// @Description  Exchange a valid refresh token for a new pair of access and refresh tokens.
+// @Tags         auth
+// @Accept       json
+// @Produce      json
 // @Param        RefreshRequest  body      RefreshRequest  true  "Refresh token payload"
 // @Success      200  {object}  RefreshResponse
 // @Failure      400  {object}  map[string]string  "invalid request"
 // @Failure      401  {object}  map[string]string  "invalid or expired refresh token"
 // @Failure      500  {object}  map[string]string  "internal server error"
-// @Router       /auth/refresh [post]
+// @Router       /refresh [post]
 func (h *Handler) Refresh(c *gin.Context) {
 
 	const op = "auth.server.auth.Refresh"

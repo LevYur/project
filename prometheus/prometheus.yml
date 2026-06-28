@@ -1,5 +1,5 @@
 global:
-  scrape_interval: 5s
+  scrape_interval: 15s
 
 scrape_configs:
   - job_name: "gateway"
@@ -10,8 +10,15 @@ scrape_configs:
           service: "gateway"
 
   - job_name: "auth"
-    metrics_path: /api/auth/metrics # указывает путь к /metrics внутри приложения
+    metrics_path: /api/auth/metrics
     static_configs:
       - targets: ["auth-service:7971"]  # порт контейнера auth
         labels:
           service: "auth"
+
+  - job_name: "cart"
+    metrics_path: /api/cart/metrics
+    static_configs:
+      - targets: [ "cart-service:7074" ]
+        labels:
+          service: "cart"

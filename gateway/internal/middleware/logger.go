@@ -1,9 +1,9 @@
 package middleware
 
 import (
+	"gateway/pkg/constants"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
-	"project/gateway/pkg/constants"
 	"time"
 )
 

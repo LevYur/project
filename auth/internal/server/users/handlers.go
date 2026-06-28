@@ -1,14 +1,14 @@
 package users
 
 import (
+	errs "auth/internal/errors"
+	"auth/internal/metrics"
+	"auth/pkg/constants"
 	"context"
 	"errors"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"net/http"
-	errs "project/auth/internal/errors"
-	"project/auth/internal/metrics"
-	"project/auth/pkg/constants"
 )
 
 type UsersService interface {
@@ -23,19 +23,19 @@ func NewHandler(service UsersService) *Handler {
 	return &Handler{usersService: service}
 }
 
-// Register godoc
-// @Summary User register
-// @Description Register a new user with email, password, and name.
-// Returns authentication tokens on success.
-// @Tags auth
-// @Accept json
-// @Produce json
+// Register      godoc
+// @Summary      User register
+// @Description  Register a new user with email, password, and name.
+// Returns       authentication tokens on success.
+// @Tags         auth
+// @Accept       json
+// @Produce      json
 // @Param        registerRequest  body      RegisterRequest  true  "Register credentials"
 // @Success      200  {object}  RegisterResponse
 // @Failure      400  {object}  map[string]string  "invalid request"
 // @Failure      409  {object}  map[string]string  "user already registered"
 // @Failure      500  {object}  map[string]string  "internal server error"
-// @Router       /auth/register [post]
+// @Router       /register [post]
 func (h *Handler) Register(c *gin.Context) {
 
 	const op = "auth.server.users.Register"

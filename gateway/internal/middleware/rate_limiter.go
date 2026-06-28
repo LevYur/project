@@ -1,11 +1,11 @@
 package middleware
 
 import (
+	"gateway/pkg/constants"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"golang.org/x/time/rate"
 	"net/http"
-	"project/gateway/pkg/constants"
 	"sync"
 )
 
@@ -21,7 +21,7 @@ func ResetVisitors() {
 func RateLimiter() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		const op = "project/gateway.middleware.RateLimiter"
+		const op = "gateway.middleware.RateLimiter"
 
 		ip := c.ClientIP()
 		limiter := GetVisitor(ip)

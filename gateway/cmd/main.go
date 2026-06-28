@@ -17,15 +17,17 @@
 package main
 
 import (
+	"fmt"
+	_ "gateway/docs"
+	"gateway/internal/clients/cartclient"
+	"gateway/internal/config"
+	"gateway/internal/logger"
+	_ "gateway/internal/metrics"
+	"gateway/internal/server"
+	"gateway/internal/validation"
+	"gateway/pkg/constants"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
-	_ "project/gateway/docs"
-	"project/gateway/internal/config"
-	"project/gateway/internal/logger"
-	_ "project/gateway/internal/metrics"
-	"project/gateway/internal/server"
-	"project/gateway/internal/validation"
-	"project/gateway/pkg/constants"
 )
 
 func main() {
@@ -44,7 +46,28 @@ func main() {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
-	router := server.SetupRouter(cfg, log)
+	cartClient := cartclient.New(
+		log,
+		cartclient.WithEndpoint(cfg.CartServiceGRPCAddr),
+		cartclient.WithLogger(log.Named("cartclient")),
+		cartclient.WithDialTimeout(cfg.DialTimeout),
+		cartclient.WithRetryPolicy(fmt.Sprintf(`{
+		"methodConfig": [{
+			"name": [{"service": "cart.CartService"}],
+			"loadBalancingConfig": [{"round_robin": {}}],
+			"retryPolicy": {
+				"maxAttempts": %d,
+				"initialBackoff": "0.1s",
+				"maxBackoff": "1s",
+				"backoffMultiplier": 2,
+                "retryableStatusCodes": ["UNAVAILABLE"]
+			}
+		}]
+	}`, cfg.Retry)),
+	)
+	defer func() { _ = cartClient.Close() }()
+
+	router := server.SetupRouter(cfg, cartClient, log)
 
 	// run server
 	gatewayServer := server.New(router, log, cfg)

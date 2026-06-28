@@ -29,12 +29,12 @@ type Auth struct {
 }
 
 type Services struct {
-	AuthServiceAddr     string `env:"SERVICES_AUTH_SERVICE_ADDR"`
-	ProductsServiceAddr string `env:"SERVICES_PRODUCTS_SERVICE_ADDR"`
-	UsersServiceAddr    string `env:"SERVICES_USERS_SERVICE_ADDR"`
-	BasketServiceAddr   string `env:"SERVICES_BASKET_SERVICE_ADDR"`
-	OrdersServiceAddr   string `env:"SERVICES_ORDERS_SERVICE_ADDR"`
-	NotsServiceAddr     string `env:"SERVICES_NOTS_SERVICE_ADDR"`
+	AuthServiceAddr     string `env:"AUTH_SERVICE_ADDR"`
+	ProductsServiceAddr string `env:"PRODUCTS_SERVICE_ADDR"`
+	UsersServiceAddr    string `env:"USERS_SERVICE_ADDR"`
+	CartServiceAddr     string `env:"CART_SERVICE_ADDR"`
+	OrdersServiceAddr   string `env:"ORDERS_SERVICE_ADDR"`
+	NotsServiceAddr     string `env:"NOTS_SERVICE_ADDR"`
 }
 
 type Database struct {
@@ -46,7 +46,7 @@ type Database struct {
 }
 
 func MustLoad() *Config {
-
+	
 	var cfg Config
 
 	// settings from env variables (from docker)

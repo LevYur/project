@@ -1,13 +1,13 @@
 package server
 
 import (
+	"auth/internal/config"
+	"auth/pkg/constants"
 	"context"
 	"errors"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"net/http"
-	"project/auth/internal/config"
-	"project/auth/pkg/constants"
 	"time"
 )
 

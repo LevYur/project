@@ -11,30 +11,30 @@
 // @license.name    Apache 2.0
 // @license.url     http://www.apache.org/licenses/LICENSE-2.0.html
 
-// @BasePath      /api
+// @BasePath        /api/auth
 
 package main
 
 import (
+	_ "auth/docs"
+	"auth/internal/broker/rabbitmq"
+	"auth/internal/config"
+	"auth/internal/logger"
+	"auth/internal/middleware"
+	authrepo "auth/internal/repository/auth"
+	usersrepo "auth/internal/repository/users"
+	"auth/internal/server"
+	"auth/internal/service/auth"
+	"auth/internal/service/tokens"
+	"auth/internal/service/users"
+	authdb "auth/internal/storage/auth"
+	"auth/internal/validation"
+	"auth/pkg/constants"
 	"context"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"os"
 	"os/signal"
-	_ "project/auth/docs"
-	"project/auth/internal/broker/rabbitmq"
-	"project/auth/internal/config"
-	"project/auth/internal/logger"
-	"project/auth/internal/middleware"
-	authrepo "project/auth/internal/repository/auth"
-	usersrepo "project/auth/internal/repository/users"
-	"project/auth/internal/server"
-	"project/auth/internal/service/auth"
-	"project/auth/internal/service/tokens"
-	"project/auth/internal/service/users"
-	authdb "project/auth/internal/storage/auth"
-	"project/auth/internal/validation"
-	"project/auth/pkg/constants"
 	"syscall"
 	"time"
 )

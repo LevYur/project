@@ -1,9 +1,9 @@
 package logger
 
 import (
+	"auth/pkg/constants"
 	"fmt"
 	"go.uber.org/zap"
-	"project/auth/pkg/constants"
 )
 
 func InitLogger(env string) *zap.Logger {
@@ -42,6 +42,6 @@ func InitLogger(env string) *zap.Logger {
 	if err != nil {
 		panic(fmt.Sprintf("%s, %v", op, err))
 	}
-
+	
 	return logger
 }

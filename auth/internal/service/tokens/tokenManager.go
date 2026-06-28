@@ -1,9 +1,9 @@
 package tokens
 
 import (
+	"auth/internal/config"
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
-	"project/auth/internal/config"
 	"strconv"
 	"time"
 )

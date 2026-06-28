@@ -1,11 +1,8 @@
 services:
 
   gateway-service:
-    build:
-      context: .
-      dockerfile: ./Dockerfile
+    build: ./gateway
     container_name: gateway-service
-    command: ["./gateway-service"]
     restart: unless-stopped
     ports:
       - "7970:7970"
@@ -24,11 +21,8 @@ services:
 
   # ALL auth-service containers ===============================================
   auth-service:
-    build:
-      context: .
-      dockerfile: ./Dockerfile
+    build: ./auth
     container_name: auth-service
-    command: ["./auth-service"]
     restart: unless-stopped
     ports:
       - "7971:7971"
@@ -72,8 +66,79 @@ services:
     networks:
       - project
 
+
+  # ALL cart-service containers ===============================================
+  cart-service:
+    build: ./cart
+    container_name: cart-service
+    env_file:
+      - ./cart/config/.env.prod
+    depends_on:
+      cart-db:
+        condition: service_healthy
+    ports:
+      - "7974:7974"
+    networks:
+      - project
+
+  cart-db:
+    image: postgres:16
+    container_name: cart-db
+    restart: always
+    env_file:
+      - ./cart/config/.env.prod
+    ports:
+      - "5433:5432"
+    volumes:
+      - cart-db:/var/lib/postgresql/data
+      - ./cart/db/carts/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d carts -h localhost"]
+      interval: 3s
+      timeout: 5s
+      retries: 5
+    networks:
+      - project
+
+
+# ALL products-service containers ===============================================
+  products-service:
+    build: ./products
+    container_name: products-service
+    env_file:
+      - ./products/config/.env.prod
+    depends_on:
+      products-db:
+        condition: service_healthy
+    ports:
+      - "7972:7972"
+    networks:
+      - project
+
+  products-db:
+    image: postgres:16
+    container_name: products-db
+    restart: always
+    env_file:
+      - ./products/config/.env.prod
+    ports:
+      - "5434:5432"
+    volumes:
+      - products-db:/var/lib/postgresql/data
+      - ./products/db/products/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d products -h 127.0.0.1"]
+      interval: 3s
+      timeout: 5s
+      retries: 5
+    networks:
+      - project
+
+
 volumes:
   auth-db:
+  cart-db:
+  products-db:
     
 networks:
   project:
