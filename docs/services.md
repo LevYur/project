@@ -8,7 +8,7 @@
 
 # Общая схема взаимодействия
 
-![Общая архитектура проекта](docs/images/architecture.png)
+![Общая архитектура проекта](images/architecture.png)
 
 ---
 

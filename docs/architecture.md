@@ -8,7 +8,7 @@
 
 # Общая схема системы
 
-![Общая архитектура проекта](docs/images/architecture.png)
+![Общая архитектура проекта](images/architecture.png)
 
 ---
 
